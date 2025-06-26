@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Resume Result{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="flex flex-col lg:flex-row gap-6 max-w-screen-2xl mx-auto py-6">
+
+    <!-- LEFT: Structured Resume Data -->
+    <div class="flex-[1.5] bg-gray-800 rounded-lg p-6 space-y-4 shadow-md overflow-y-auto max-h-[85vh]">
+      <h2 class="text-2xl font-semibold mb-4">Resume Summary</h2>
+
+      <div><span class="font-medium">Name:</span> {{ resume.name }}</div>
+      <div><span class="font-medium">Email:</span> {{ resume.email }}</div>
+      <div><span class="font-medium">Phone:</span> {{ resume.phone }}</div>
+
+      <div><span class="font-medium">GitHub:</span>
+        {% if resume.github %}
+          <a href="{{ resume.github }}" class="text-blue-400 underline" target="_blank">{{ resume.github }}</a>
+        {% else %}—{% endif %}
+      </div>
+
+      <div><span class="font-medium">LinkedIn:</span>
+        {% if resume.linkedin %}
+          <a href="{{ resume.linkedin }}" class="text-blue-400 underline" target="_blank">{{ resume.linkedin }}</a>
+        {% else %}—{% endif %}
+      </div>
+
+      <div><span class="font-medium">Job Role:</span> {{ resume.job_role.title }} (v{{ resume.job_role.version }})</div>
+      <div><span class="font-medium">Total Experience:</span> {{ resume.total_experience }} years</div>
+
+      <div><span class="font-medium">Verdict:</span>
+        {% if resume.verdict == 'matched' %}
+          <span class="bg-green-600 text-white px-2 py-1 rounded text-sm">Matched</span>
+        {% elif resume.verdict == 'skipped' %}
+          <span class="bg-red-600 text-white px-2 py-1 rounded text-sm">Skipped</span>
+        {% elif resume.verdict == 'overqualified' %}
+          <span class="bg-yellow-500 text-black px-2 py-1 rounded text-sm">Overqualified</span>
+        {% endif %}
+      </div>
+
+      <div>
+        <span class="font-medium">Score:</span>
+        <span
+          {% if resume.score < 80 %}
+            class="text-red-500"
+          {% elif resume.score <= 95 %}
+            class="text-green-400"
+          {% else %}
+            class="text-yellow-400"
+          {% endif %}
+        >
+          {{ resume.score }} / 100
+        </span>
+      </div>
+
+      <hr class="border-gray-700 my-4">
+
+      <!-- Skills -->
+      <div>
+        <h3 class="text-lg font-semibold mb-1">Skills</h3>
+        <div class="text-sm space-y-1">
+          <p><span class="font-medium">Matched Mandatory:</span> {{ resume.matched_mandatory_skills|join:", " }}</p>
+          <p><span class="font-medium">Missed Mandatory:</span> {{ resume.missed_mandatory_skills|join:", " }}</p>
+          <p><span class="font-medium">Matched Optional:</span> {{ resume.matched_optional_skills|join:", " }}</p>
+          <p><span class="font-medium">Missed Optional:</span> {{ resume.missed_optional_skills|join:", " }}</p>
+        </div>
+      </div>
+
+      <!-- Experiences -->
+      {% if resume.experiences %}
+        <hr class="border-gray-700 my-4">
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Experience Details</h3>
+          <ul class="text-sm list-disc ml-5 space-y-1">
+            {% for exp in resume.experiences %}
+              <li><span class="font-medium">{{ exp.designation }}</span> at {{ exp.company }} ({{ exp.duration }})</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT: PDF Preview -->
+    <div class="flex-1 h-[85vh] bg-gray-800 rounded-lg overflow-hidden shadow-md">
+      <iframe 
+        src="{{ resume.resume.url }}" 
+        class="w-full h-full"
+        frameborder="0">
+        Your browser does not support PDFs. 
+        <a href="{{ resume.resume.url }}">Download PDF</a>
+      </iframe>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
