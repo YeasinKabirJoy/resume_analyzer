@@ -11,43 +11,43 @@
     <!-- Card 1 -->
     <div class="bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition">
       <h2 class="text-xl font-semibold mb-2">Total Resumes</h2>
-      <p class="text-3xl font-bold text-blue-400">128</p>
+      <p class="text-3xl font-bold text-blue-400">{{resume_count}}</p>
       <p class="text-gray-400 mt-1">Uploaded this month</p>
     </div>
 
     <!-- Card 2 -->
     <div class="bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition">
       <h2 class="text-xl font-semibold mb-2">Matches</h2>
-      <p class="text-3xl font-bold text-green-400">76</p>
+      <p class="text-3xl font-bold text-green-400">{{matches}}</p>
       <p class="text-gray-400 mt-1">Qualified Candidates</p>
     </div>
 
     <!-- Card 3 -->
     <div class="bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition">
       <h2 class="text-xl font-semibold mb-2">Skipped</h2>
-      <p class="text-3xl font-bold text-red-400">34</p>
+      <p class="text-3xl font-bold text-red-400">{{skipped}}</p>
       <p class="text-gray-400 mt-1">Didn’t meet criteria</p>
     </div>
 
     <!-- Card 4 -->
     <div class="bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition">
       <h2 class="text-xl font-semibold mb-2">Jobs Listed</h2>
-      <p class="text-3xl font-bold text-yellow-400">12</p>
+      <p class="text-3xl font-bold text-yellow-400">{{active_job_count}}</p>
       <p class="text-gray-400 mt-1">Active openings</p>
     </div>
 
     <!-- Card 5 -->
     <div class="bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition">
       <h2 class="text-xl font-semibold mb-2">Average Score</h2>
-      <p class="text-3xl font-bold text-indigo-400">86.3</p>
+      <p class="text-3xl font-bold text-indigo-400">{{average_score}}</p>
       <p class="text-gray-400 mt-1">Across all resumes</p>
     </div>
 
     <!-- Card 6 -->
     <div class="bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition">
-      <h2 class="text-xl font-semibold mb-2">Pending Reviews</h2>
-      <p class="text-3xl font-bold text-orange-400">6</p>
-      <p class="text-gray-400 mt-1">Awaiting scoring</p>
+      <h2 class="text-xl font-semibold mb-2">Overqualified</h2>
+      <p class="text-3xl font-bold text-orange-400">{{over_qualified}}</p>
+      <p class="text-gray-400 mt-1">Exceeded Role Requirements</p>
     </div>
 
   </div>

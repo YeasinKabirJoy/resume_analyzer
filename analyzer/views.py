@@ -1,9 +1,24 @@
 from django.shortcuts import render
 from .models import *
-from django.db.models import Count
+from django.db.models import Count,Avg
 
 def home(request):
-    return render(request,'home.html')
+    all_resume = Resume.objects.all()
+    average = all_resume.aggregate(average=Avg('score'))['average']
+    active_job_count = JobRole.objects.filter(active=True).count()
+    resume_count = all_resume.count()
+    matches = all_resume.filter(verdict='matched').count()
+    skipped = all_resume.filter(verdict='skipped').count()
+    over_qualified = all_resume.filter(verdict='overqualified').count()
+    context = {
+        'resume_count':resume_count,
+        'matches':matches,
+        'skipped':skipped,
+        'over_qualified':over_qualified,
+        'active_job_count':active_job_count,
+        'average_score':average
+    }
+    return render(request,'home.html',context)
 
 def resume_upload(request):
     if request.method == "POST":
