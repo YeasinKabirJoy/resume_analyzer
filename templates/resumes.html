@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Resumes for {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold">Resumes</h1>
+      <p class="text-gray-400">Job: <span class="text-white">{{ job.title }}</span> (v{{ job.version }})</p>
+    </div>
+    <a href="{% url 'job_details' job.id %}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
+      Back to Job Detail
+    </a>
+  </div>
+
+  {% if resumes %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for resume in resumes %}
+        <div class="bg-gray-800 rounded-lg p-4 shadow-md">
+          <h2 class="text-lg font-semibold text-white mb-2">{{ resume.name|default:"Unnamed" }}</h2>
+          <p class="text-sm text-gray-400 mb-1">Email: {{ resume.email|default:"—" }}</p>
+          <p class="text-sm text-gray-400 mb-1">Score: 
+            <span
+              {% if resume.score < 80 %} class="text-red-500"
+              {% elif resume.score <= 95 %} class="text-green-400"
+              {% else %} class="text-yellow-400"
+              {% endif %}>
+              {{ resume.score|default:"—" }} / 100
+            </span>
+          </p>
+          <p class="text-sm text-gray-400 mb-3">Verdict: {{ resume.verdict|capfirst|default:"—" }}</p>
+          <a href="{% url 'result' resume.id %}" class="text-blue-400 hover:underline text-sm">View Details</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-400">No resumes found for this job.</p>
+  {% endif %}
+</div>
+{% endblock %}

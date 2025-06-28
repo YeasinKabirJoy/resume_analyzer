@@ -1,13 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}Active Jobs{% endblock %}
 
+{% block style %}
+input[type="text"],
+input[type="number"],
+input[type="email"] {
+background-color: #1f2937; /* Tailwind's gray-800 */
+color:rgb(0, 0, 0); /* Tailwind's gray-100 */
+  }
+  
+{% endblock style %}
+
 {% block content %}
 <div class="content">
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">Active Job Roles</h1>
-    <a href="/jobs" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
-      View All Jobs
-    </a>
+    <h1 class="text-3xl font-bold">{{title}} Job Roles</h1>
+    
+    {% if title ==  'Active' %}
+      <a href="/jobs/?all=yes" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+        View All Jobs
+      </a>
+    {% else %}
+      <a href="/jobs" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+        View Active Jobs
+      </a>
+    {% endif %}
+
+
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -22,10 +41,10 @@
             </p>
           </div>
           <div class="mt-4 flex justify-between items-center">
-            <a href="" class="text-blue-400 hover:underline text-sm">
+            <a href="{% url 'job_details' job.id %}" class="text-blue-400 hover:underline text-sm">
               View Job Detail
             </a>
-            <a href="" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+            <a href="{% url 'resumes' job.id %}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
               View All Resumes
             </a>
           </div>

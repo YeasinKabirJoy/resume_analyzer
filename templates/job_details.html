@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }} Details{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="max-w-3xl bg-gray-800 rounded-lg p-6 shadow-md">
+    <h1 class="text-3xl font-bold mb-4">Job Overview</h1>
+
+    <div class="mb-4">
+      <p class="text-xl text-white font-semibold">{{ job.title }}</p>
+      <p class="text-gray-400">Version: <span class="text-white">{{ job.version }}</span></p>
+      <p class="text-gray-400">Active: <span class="text-white">{{ job.active|yesno:"Yes,No" }}</span></p>
+      <p class="text-gray-400">Created on: <span class="text-white">{{ job.created_at|date:"F j, Y" }}</span></p>
+    </div>
+
+    <div class="flex flex-wrap gap-4 mt-6">
+      <a href="{% url 'resumes' job.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm shadow transition">
+        View Resumes ({{ job.resume_set.count }})
+      </a>
+      <a href="{% url 'job_edit' job.id %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded text-sm shadow transition">
+        Edit Job
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

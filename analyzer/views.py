@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from .models import *
 from django.db.models import Count,Avg
-
+from .forms import JobRoleForm
 def home(request):
     all_resume = Resume.objects.all()
     average = all_resume.aggregate(average=Avg('score'))['average']
@@ -30,15 +30,22 @@ def resume_upload(request):
         }
     return render(request,'resume_upload.html',context)
 
-def result(request):
-    resume_data = Resume.objects.get(id="28e3777d-2b8a-4ae4-91b3-c52a2434970d")
+def result(request,id):
+    resume_data = Resume.objects.get(id=id)
     context = {
         "resume": resume_data
     }
     return render(request,'result.html',context)
 
 def jobs(request):
-    jobs = JobRole.objects.filter(active=True).order_by('created_at').annotate(resume_count=Count('resume'))
+    title = ''
+    all = request.GET.get('all') 
+    if all and all == 'yes':
+        jobs = JobRole.objects.all().order_by('created_at').annotate(resume_count=Count('resume'))
+        title = 'All'
+    else:
+        jobs = JobRole.objects.filter(active=True).order_by('created_at').annotate(resume_count=Count('resume'))
+        title = 'Active'
     active_jobs = []
 
     for job in jobs:
@@ -47,4 +54,44 @@ def jobs(request):
             'title': job.title,
             'resume_count': job.resume_count,
         })
-    return render(request,'jobs.html',{'active_jobs': active_jobs})
+
+    context = {
+        'active_jobs': active_jobs,
+        'title':title
+        
+        }
+    return render(request,'jobs.html',context)
+
+def job_details(request,id):
+    job = JobRole.objects.get(id=id)
+    context = {
+        'job':job
+    }
+    return render(request,'job_details.html',context)
+
+def job_edit(request,id):
+    job = JobRole.objects.get(id=id)
+    form = JobRoleForm(instance=job)
+    if request.method == "POST":
+         form = JobRoleForm(request.POST,instance=job)
+         if form.is_valid():
+             form.save()
+             return redirect('job_details',id=job.id)
+
+    context = {
+        'form':form,
+        'job':job
+    }
+
+    return render(request,'job_edit.html',context)
+
+def resumes(request,id):
+    job = JobRole.objects.get(id=id)
+    resumes = job.resume_set.all()
+
+    context = {
+        'job':job,
+        'resumes':resumes
+    }
+    
+    return render(request,'resumes.html',context)
