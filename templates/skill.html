@@ -98,7 +98,7 @@
         <!-- Add Skill Form -->
         <div class="skill-input-container">
             <h2 class="text-xl font-semibold text-gray-100 mb-4">Add New Skill</h2>
-            <form method="post" class="flex gap-2">
+            <form method="post" class="flex gap-2" action={% url 'skills' %}>
                 {% csrf_token %}
                 <input type="text" name="skill_name" 
                        class="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" 
@@ -144,7 +144,7 @@
             <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition">
                 Cancel
             </button>
-            <form id="deleteForm" method="post" >
+            <form id="deleteForm" method="post" action={% url 'skill_delete' %} >
                 {% csrf_token %}
                 <input type="hidden" name="skill_id" id="skillToDeleteId">
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition">
@@ -159,7 +159,7 @@
 <div id="editModal" class="modal-overlay hidden">
     <div class="modal-content">
         <h3 class="text-lg font-medium text-gray-100">Edit Skill</h3>
-        <form id="editForm" method="post"  class="mt-4">
+        <form id="editForm" method="post" action={% url 'skill_edit' %}  class="mt-4">
             {% csrf_token %}
             <input type="hidden" name="skill_id" id="editSkillId">
             <input type="text" name="skill_name" id="editSkillName"

@@ -3,16 +3,16 @@ from llama_cpp import Llama
 from datetime import datetime
 import json
 # === Configuration ===
-MODEL_PATH = r"F:\Llama-3.2-3B-Instruct-UD-Q6_K_XL.gguf" # Change as needed
+MODEL_PATH = r"C:\Users\Lenovo\Downloads\mistral-7b-instruct-v0.1.Q4_K_M.gguf"  # Change as needed
 
-def build_gguf_resume_prompt(resume_text: str, mandatory_skills: list, optional_skills: list) -> str:
-    today_date = datetime.now().strftime("%d %b %Y")
+def build_phi_prompt(resume_text: str, mandatory_skills: list, optional_skills: list) -> str:
+   prompt = f"""<|system|>
 
-    prompt_content = f"""
-You are an AI assistant that extracts structured data from resumes.
+You are an AI assistant that extracts structured data from resume.
 
 Respond only with a valid JSON object. No explanation or extra text.
 
+<|user|>
 **Instructions**:
 1. **Information Extraction**  
  Extract from the resume text, preserving exact text:  
@@ -71,23 +71,9 @@ Match extracted skills against provided lists using case-insensitive matching an
 
 Resume:
 {resume_text.strip()}
-""".strip()
-
-    gguf_prompt = f"""<|start_header_id|>system<|end_header_id|>
-
-Cutting Knowledge Date: December 2023
-Today Date: {today_date}
-<|eot_id|>
-
-<|start_header_id|>user<|end_header_id|>
-
-{prompt_content}
-<|eot_id|>
-
-<|start_header_id|>assistant<|end_header_id|>
-
-"""
-    return gguf_prompt
+<|assistant|>"""
+   
+   return prompt
 
 resume_text = """Sk. Yeasin Kabir Joy
 Shuvadda Purba Para, Keraniganj, Dhaka-1310
@@ -148,7 +134,7 @@ ahrzd@umkc.edu
 mandatory_skills = ["python", "django", "django rest framework"]
 optional_skills = ["Docker,Postgres","PHP"]
 
-gguf_prompt = build_gguf_resume_prompt(resume_text, mandatory_skills, optional_skills)
+gguf_prompt = build_phi_prompt(resume_text, mandatory_skills, optional_skills)
 N_TOKENS = 2048
 N_THREADS = 16  # Set based on your CPU (e.g. os.cpu_count())
 
@@ -171,7 +157,7 @@ start_infer = time.time()
 
 # <|user|>\n{PROMPT}</s>\n<|assistant|>
 response = llm(
-    prompt=gguf_prompt,
+    prompt="hii",
     max_tokens=N_TOKENS,
     temperature=0,
 )
@@ -190,56 +176,5 @@ print(f"⚡ Generation Time: {infer_time:.2f} seconds")
 print(f"⚡ Tokens/sec: {response['usage']['completion_tokens'] / infer_time:.2f}")
 
 
-
-# 1. Extract the following:
-#    - name, email, phone, github, linkedin (use "" if not found)
-#    - all skills listed in the resume (keep original casing and spelling)
-#    - experiences: include "designation", "company", "start", "end" (format: "Mon YYYY" or "Present")
-
-# 2. Skill Matching:
-#    - Match extracted skills against the provided lists (case-insensitive)
-#    - Consider common aliases (e.g., "DRF" → "django rest framework")
-#    - Do not duplicate a skill across mandatory and optional
-#    - Use the original skill names from the lists in the output
-#    - Add unmatched ones to the respective "missing_*" lists
-#    - Match skills only if the exact skill or its common abbreviation appears in the resume text.
-#    - **Do not guess or infer skills that are not mentioned**.
-
-
-# 2. **Skill Matching**  
-# Match extracted skills against provided lists using case-insensitive matching and alias mappings (e.g., "DRF" → "django rest framework").  
-# - **Mandatory Skills**: {', '.join(mandatory_skills)}  
-#   - Match each skill or alias to resume’s skill list.  
-#   - Add matches to **matched_mandatory** (use list name).  
-#   - Add unmatched to **missing_mandatory**.  
-#   - Prioritize mandatory if skill is in both lists.  
-# - **Optional Skills**: {', '.join(optional_skills)}  
-#   - Match each skill or alias to resume’s skill list, if not already matched as mandatory.  
-#   - Add matches to **matched_optional** (use list name).  
-#   - Add unmatched to **missing_optional**.  
-# - **Constraints**:  
-#   - Skills must be explicitly listed in resume’s skill list.  
-#   - No inferred skills.  
-#   - Use only provided aliases.  
-#   - Skills cannot be in both matched_mandatory and matched_optional.
-
-#  "matched_mandatory": [],
-#   "missing_mandatory": [],
-#   "matched_optional": [],
-#   "missing_optional": []
-
-# 1. **Information Extraction**  
-# Extract from the resume text, preserving exact text:  
-# - **Name**: Full name. Set to "" if not found.  
-# - **Email**: Email address. Set to "" if not found.  
-# - **Phone**: Phone number. Set to "" if not found.  
-# - **GitHub**: GitHub URL/username. Set to "" if not found.  
-# - **LinkedIn**: LinkedIn URL/username. Set to "" if not found.  
-# - **Skills**: All listed skills, preserving exact casing/spelling (e.g., "JavaScript").  
-# - **Experiences**: For each job:  
-#   - **Designation**: Job title.  
-#   - **Company**: Employer name.  
-#   - **Start Date**: Format as "Mon YYYY" (e.g., "Jan 2020").  
-#   - **End Date**: Format as "Mon YYYY" or "Present" if current.  
 
 

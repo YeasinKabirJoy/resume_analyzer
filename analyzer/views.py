@@ -90,6 +90,8 @@ def job_edit(request,id):
 
 
 def job_create(request):
+    if request.method == "POST":
+        print(request.POST)
     skills = Skill.objects.all()
 
     context = {
@@ -111,6 +113,35 @@ def resumes(request,id):
 
 
 def skill(request):
+    if request.method == "POST":
+        title =  request.POST.get('skill_name')
+        Skill.objects.create(title=title)
+    skills = Skill.objects.all()
+    context = {
+        'skills':skills,
+    }
+    return render(request,'skill.html',context)
+
+
+def skill_edit(request):
+    if request.method == "POST":
+        id =  request.POST.get('skill_id')
+        title =  request.POST.get('skill_name')
+        obj = Skill.objects.get(id=id)
+        obj.title = title
+        obj.save()
+    skills = Skill.objects.all()
+    context = {
+        'skills':skills,
+    }
+    return render(request,'skill.html',context)
+
+
+def skill_delete(request):
+    if request.method == "POST":
+        id =  request.POST.get('skill_id')
+        obj = Skill.objects.get(id=id)
+        obj.delete()
     skills = Skill.objects.all()
     context = {
         'skills':skills,
