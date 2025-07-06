@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block style %}
+    /* Select2 Dark Theme */
+    .select2-container--default .select2-selection--multiple {
+        background-color: #1f2937;
+        border: 1px solid #374151;
+        border-radius: 0.375rem;
+        min-height: 42px;
+        color: #e5e7eb;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #3b82f6;
+        border: 1px solid #2563eb;
+        color: white;
+        margin-left:20px
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 0.25rem;
+    }
+
+    .select2-container--default .select2-search--inline .select2-search__field {
+        color: #e5e7eb;
+    }
+
+    .select2-dropdown {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+
+    .select2-results__option {
+        color: #e5e7eb;
+        padding: 8px;
+    }
+
+    .select2-results__option--highlighted {
+        background-color: #3b82f6 !important;
+    }
+
+    /* Form Styling */
+    .form-input {
+        background-color: #1f2937;
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+
+    .form-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 1px #3b82f6;
+    }
+
+    .form-label {
+        color: #e5e7eb;
+    }
+
+    .mandatory-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #374151;
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+        background-color: #3b82f6;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+{% endblock %}
+
+{% block content %}
+<div class="content flex items-center justify-center py-8">
+    <div class="bg-gray-800 shadow-lg rounded-lg p-8 w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-gray-100">Create New Job Role</h1>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Job Title -->
+            <div>
+                <label for="id_title" class="block text-sm font-medium text-gray-300 mb-1">Job Title</label>
+                <input type="text" name="title" id="id_title" required
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Minimum Experience -->
+            <div>
+                <label for="id_minimum_experience" class="block text-sm font-medium text-gray-300 mb-1">Minimum Experience (years)</label>
+                <input type="number" name="minimum_experience" id="id_minimum_experience" min="0" value="0" required
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Version -->
+            {% comment %} <div>
+                <label for="id_version" class="block text-sm font-medium text-gray-300 mb-1">Version</label>
+                <input type="number" name="version" id="id_version" min="1" value="1" required
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+            </div> {% endcomment %}
+
+            <!-- Active Status -->
+            <div class="flex items-center">
+                <input type="checkbox" name="active" id="id_active" checked
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded">
+                <label for="id_active" class="ml-2 block text-sm text-gray-300">Active</label>
+            </div>
+
+            <!-- Skills Selection -->
+            <div>
+                <label for="id_skills" class="block text-sm font-medium text-gray-300 mb-1">Required Skills</label>
+                <select name="skills" id="id_skills" multiple="multiple" class="w-full">
+                    {% for skill in skills %}
+                        <option value="{{ skill.id }}">{{ skill.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Mandatory Skills Toggle -->
+            <div id="selected-skills-container" class="space-y-2 hidden">
+                <p class="text-sm font-medium text-gray-300">Set mandatory skills:</p>
+                <!-- Dynamic content will be added here by JavaScript -->
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
+                    Create Job Role
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for skills
+        $('#id_skills').select2({
+            placeholder: "Select required skills",
+            allowClear: true,
+            closeOnSelect: false
+        });
+
+        // Function to update dropdown options by hiding selected ones
+        function updateDropdownOptions() {
+            const selectedSkills = $('#id_skills').val() || [];
+            $('#id_skills option').each(function() {
+                const option = $(this);
+                if (selectedSkills.includes(option.val())) {
+                    option.hide();
+                } else {
+                    option.show();
+                }
+            });
+        }
+
+        // When skills selection changes
+        $('#id_skills').on('change', function() {
+            const selectedSkills = $(this).val() || [];
+            const container = $('#selected-skills-container');
+            
+            // Update dropdown to hide selected skills
+            updateDropdownOptions();
+            
+            if (selectedSkills.length > 0) {
+                container.removeClass('hidden');
+                
+                // Clear existing toggles
+                container.find('.mandatory-toggle').remove();
+                
+                // Add a toggle for each selected skill
+                selectedSkills.forEach(skillId => {
+                    const skillName = $(this).find(`option[value="${skillId}"]`).text();
+                    container.append(`
+                        <div class="mandatory-toggle">
+                            <span class="text-gray-300">${skillName}</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="mandatory_${skillId}" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="text-sm text-gray-400">Mandatory</span>
+                        </div>
+                    `);
+                });
+            } else {
+                container.addClass('hidden');
+            }
+        });
+
+        // Initial update
+        updateDropdownOptions();
+    });
+</script>
+{% endblock %}

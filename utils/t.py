@@ -2,7 +2,7 @@ import time
 from llama_cpp import Llama
 
 # === Configuration ===
-MODEL_PATH = r"C:\lm\TheBloke\TinyLlama-1.1B-Chat-v1.0-GGUF\tinyllama-1.1b-chat-v1.0.Q6_K.gguf"  # Change as needed
+MODEL_PATH = r"C:\Users\Lenovo\Downloads\Llama-3.2-3B-Instruct-UD-Q4_K_XL.gguf"  # Change as needed
 
 resume_text = """Sk. Yeasin Kabir Joy
 Shuvadda Purba Para, Keraniganj, Dhaka-1310
@@ -89,7 +89,7 @@ Optional Skills: {', '.join(optional_skills)}
 Respond ONLY with a valid JSON object using the format below.
 
 Format:
-{{
+{
   "name": "",
   "email": "",
   "phone": "",
@@ -97,18 +97,19 @@ Format:
   "linkedin": "",
   "skills": [],
   "experiences": [
-    {{
+    {
       "designation": "",
       "company": "",
       "years": 0.0
-    }}
+    }
+    ......
   ],
   "matched_mandatory": [],
   "missing_mandatory": [],
   "matched_optional": [],
   "missing_optional": [],
   "total_experience": 0.0
-}}
+}
 
 Resume:
 {resume_text}
@@ -137,8 +138,9 @@ print(f"✅ Model loaded in {load_time:.2f} seconds")
 print("Generating response...")
 start_infer = time.time()
 
+# <|user|>\n{PROMPT}</s>\n<|assistant|>
 response = llm(
-    prompt=f"<|user|>\n{PROMPT}</s>\n<|assistant|>",
+    prompt=PROMPT,
     max_tokens=N_TOKENS,
     temperature=0,
 )

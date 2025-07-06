@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block style %}
+    /* Skill Management Styles */
+    .skill-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .skill-input-container {
+        background-color: #1f2937;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #374151;
+    }
+
+    .skill-list {
+        background-color: #1f2937;
+        border-radius: 0.5rem;
+        border: 1px solid #374151;
+        overflow: hidden;
+    }
+
+    .skill-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #374151;
+        transition: background-color 0.2s ease;
+    }
+
+    .skill-item:last-child {
+        border-bottom: none;
+    }
+
+    .skill-item:hover {
+        background-color: #374151;
+    }
+
+    .skill-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .skill-actions button {
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        transition: opacity 0.2s ease;
+    }
+
+    .edit-btn {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    .delete-btn {
+        background-color: #ef4444;
+        color: white;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #1f2937;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid #374151;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="skill-container">
+        <!-- Add Skill Form -->
+        <div class="skill-input-container">
+            <h2 class="text-xl font-semibold text-gray-100 mb-4">Add New Skill</h2>
+            <form method="post" class="flex gap-2">
+                {% csrf_token %}
+                <input type="text" name="skill_name" 
+                       class="flex-1 bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" 
+                       placeholder="Enter skill name" required>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition">
+                    Add Skill
+                </button>
+            </form>
+        </div>
+
+        <!-- Skills List -->
+        <div class="skill-list">
+            <h2 class="text-xl font-semibold text-gray-100 p-4 border-b border-gray-700">Your Skills</h2>
+            {% for skill in skills %}
+            <div class="skill-item">
+                <span class="text-gray-100">{{ skill.title }}</span>
+                <div class="skill-actions">
+                    <!-- Edit Button -->
+                    <button class="edit-btn" onclick="openEditModal('{{ skill.id }}', '{{ skill.title }}')">
+                        Edit
+                    </button>
+                    <!-- Delete Button -->
+                    <button class="delete-btn" onclick="openDeleteModal('{{ skill.id }}', '{{ skill.title }}')">
+                        Delete
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-4 text-gray-400 text-center">
+                No skills added yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3 class="text-lg font-medium text-gray-100">Confirm Deletion</h3>
+        <p class="text-gray-300 mt-2">Are you sure you want to delete "<span id="skillToDeleteName"></span>"?</p>
+        <div class="modal-actions">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition">
+                Cancel
+            </button>
+            <form id="deleteForm" method="post" >
+                {% csrf_token %}
+                <input type="hidden" name="skill_id" id="skillToDeleteId">
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Skill Modal -->
+<div id="editModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3 class="text-lg font-medium text-gray-100">Edit Skill</h3>
+        <form id="editForm" method="post"  class="mt-4">
+            {% csrf_token %}
+            <input type="hidden" name="skill_id" id="editSkillId">
+            <input type="text" name="skill_name" id="editSkillName"
+                   class="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+            <div class="modal-actions">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Delete Modal Functions
+    function openDeleteModal(skillId, skillName) {
+        document.getElementById('skillToDeleteName').textContent = skillName;
+        document.getElementById('skillToDeleteId').value = skillId;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    // Edit Modal Functions
+    function openEditModal(skillId, skillName) {
+        document.getElementById('editSkillId').value = skillId;
+        document.getElementById('editSkillName').value = skillName;
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+    }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            closeDeleteModal();
+            closeEditModal();
+        }
+    });
+</script>
+{% endblock %}

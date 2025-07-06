@@ -1,64 +1,69 @@
-def make_promt(resume_text,mandatory_skills,optional_skills):
-    promt = f"""Extract information from the following resume text and produce a JSON output based on the provided mandatory and optional skills and the specified format. 
-The resume text may contain details such as name, contact information, skills, experiences, and other relevant data. 
-Ensure the JSON output includes all required fields, handling missing information appropriately (e.g., empty strings for missing contact details).
-Calculate the total experience in years as a float, approximating months to years (e.g., 12 months = 1.0 year, 6 months = 0.5 years). 
-For skills, check if the mandatory and optional skills are present in the resume, and list them in the matched and missing fields using the exact spelling and casing provided in the mandatory and optional skills lists. 
-If a skill is implied (e.g., "DRF" implies "django rest framework"), include it in the matched skills using the exact text from the mandatory or optional skills list (e.g., "django rest framework" instead of "DRF" or "Django REST Framework").
+from datetime import datetime
+def build_gguf_resume_prompt(resume_text: str, mandatory_skills: list, optional_skills: list) -> str:
+    today_date = datetime.now().strftime("%d %b %Y")
 
+    prompt_content = f"""
+You are an AI assistant that extracts structured data from resumes.
 
-
-Resume Text:
-
-{resume_text}
-
-Mandatory Skills:{', '.join(mandatory_skills)}
-
-Optional Skills:{', '.join(optional_skills)}
-
-Output Format:
-
-{{
-"name": "",
-"email": "",
-"phone": "",
-"github": "",
-"linkedin": "",
-"skills": [],
-"experiences": [
-    {{
-    "designation": "",
-    "company": "",
-    "years": "... float"
-    }},
-    {{
-    "designation": "",
-    "company": "",
-    "years": "... float"
-    }}
-],
-"matched_mandatory": [],
-"missing_mandatory": [],
-"matched_optional": [],
-"missing_optional": [],
-"total_experience": "... float"
-}}
+Respond only with a valid JSON object. No explanation or extra text.
 
 Instructions:
 
-Extract the name, email, phone, GitHub, and LinkedIn from the resume. If LinkedIn is not provided, use an empty string.
+1. Extract the following:
+   - name, email, phone, github, linkedin (use "" if not found)
+   - all skills listed in the resume (keep original casing and spelling)
+   - experiences: include "designation", "company", "start", "end" (format: "Mon YYYY" or "Present")
 
-List all skills mentioned in the resume under the "skills" field, using the exact text as it appears in the resume.
+2. Skill Matching:
+   - Match resume skills against the provided lists (case-insensitive)
+   - Consider common aliases (e.g., "DRF" → "django rest framework")
+   - Do not duplicate a skill across mandatory and optional
+   - Use the original skill names from the lists in the output
+   - Add unmatched ones to the respective "missing_*" lists
+   - Match skills only if the exact skill or its common abbreviation appears in the resume text.
+   - Do not guess or infer skills that are not mentioned.
 
-Identify experiences, including designation, company, and duration. Convert duration to years as a float (e.g., 12 months = 1.0, 5 months = 0.42).
+Mandatory Skills: {', '.join(mandatory_skills)}
+Optional Skills: {', '.join(optional_skills)}
 
-Calculate total experience by summing the duration of all experiences in years.
+3. Output Format:
+{{
+  "name": "",
+  "email": "",
+  "phone": "",
+  "github": "",
+  "linkedin": "",
+  "skills": [],
+  "experiences": [
+    {{
+      "designation": "",
+      "company": "",
+      "start": "Jan 2024",
+      "end": "Jul 2024"
+    }}
+  ],
+  "matched_mandatory": [],
+  "missing_mandatory": [],
+  "matched_optional": [],
+  "missing_optional": []
+}}
 
-Compare resume skills with mandatory and optional skills. Include implied skills (e.g., "DRF" implies "django rest framework") in matched_mandatory or matched_optional, using the exact spelling and casing from the mandatory or optional skills lists.
+Resume:
+{resume_text.strip()}
+""".strip()
 
-Output the result as a JSON object matching the specified format, with no additional text or explanations. """
-    
-    return promt
+    gguf_prompt = f"""<|start_header_id|>system<|end_header_id|>
 
+Cutting Knowledge Date: December 2023
+Today Date: {today_date}
+<|eot_id|>
 
+<|start_header_id|>user<|end_header_id|>
 
+{prompt_content}
+<|eot_id|>
+
+<|start_header_id|>assistant<|end_header_id|>
+
+"""
+    return gguf_prompt

@@ -13,9 +13,16 @@ color:rgb(0, 0, 0); /* Tailwind's gray-100 */
 
 {% block content %}
 <div class="content">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">{{title}} Job Roles</h1>
-    
+   
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold">{{ title }} Job Roles</h1>
+
+  <div class="flex gap-2">
+
+     <a href="/jobs/create/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+        Create Jobs
+      </a>
+
     {% if title ==  'Active' %}
       <a href="/jobs/?all=yes" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
         View All Jobs
@@ -26,8 +33,9 @@ color:rgb(0, 0, 0); /* Tailwind's gray-100 */
       </a>
     {% endif %}
 
-
   </div>
+</div>
+
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 

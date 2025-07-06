@@ -23,6 +23,9 @@ def home(request):
 def resume_upload(request):
     if request.method == "POST":
         pass
+        # print(request.POST.get('job_role'))
+        # print(request.FILES.get('file'))
+        # resume = Resume.objects.create()
     else:
         job_role = JobRole.objects.filter(active=True).order_by('title')
         context = {
@@ -85,6 +88,16 @@ def job_edit(request,id):
 
     return render(request,'job_edit.html',context)
 
+
+def job_create(request):
+    skills = Skill.objects.all()
+
+    context = {
+        'skills':skills,
+    }
+
+    return render(request,'job_create.html',context)
+
 def resumes(request,id):
     job = JobRole.objects.get(id=id)
     resumes = job.resume_set.all()
@@ -95,3 +108,11 @@ def resumes(request,id):
     }
     
     return render(request,'resumes.html',context)
+
+
+def skill(request):
+    skills = Skill.objects.all()
+    context = {
+        'skills':skills,
+    }
+    return render(request,'skill.html',context)
