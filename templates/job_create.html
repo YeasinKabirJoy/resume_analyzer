@@ -14,7 +14,6 @@
         background-color: #3b82f6;
         border: 1px solid #2563eb;
         color: white;
-        margin-left:20px
     }
 
     .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
@@ -56,55 +55,26 @@
         color: #e5e7eb;
     }
 
-    .mandatory-toggle {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    /* Error Styling */
+    .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
     }
 
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 24px;
+    .duplicate-warning {
+        border: 1px solid #ef4444 !important;
     }
 
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
+    .skills-section {
+        margin-bottom: 1.5rem;
     }
 
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #374151;
-        transition: .4s;
-        border-radius: 24px;
-    }
-
-    .toggle-slider:before {
-        position: absolute;
-        content: "";
-        height: 16px;
-        width: 16px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-    }
-
-    input:checked + .toggle-slider {
-        background-color: #3b82f6;
-    }
-
-    input:checked + .toggle-slider:before {
-        transform: translateX(26px);
+    .submit-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #4b5563 !important;
     }
 {% endblock %}
 
@@ -113,7 +83,7 @@
     <div class="bg-gray-800 shadow-lg rounded-lg p-8 w-full max-w-2xl">
         <h1 class="text-2xl font-bold mb-6 text-gray-100">Create New Job Role</h1>
 
-        <form method="post" class="space-y-6">
+        <form method="post" id="jobRoleForm" class="space-y-6">
             {% csrf_token %}
 
             <!-- Job Title -->
@@ -126,16 +96,9 @@
             <!-- Minimum Experience -->
             <div>
                 <label for="id_minimum_experience" class="block text-sm font-medium text-gray-300 mb-1">Minimum Experience (years)</label>
-                <input type="number" name="minimum_experience" id="id_minimum_experience" min="0" value="0" required
+                <input type="number" name="minimum_experience" id="id_minimum_experience" min="0" step="0.1" value="0" required
                        class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
-
-            <!-- Version -->
-            {% comment %} <div>
-                <label for="id_version" class="block text-sm font-medium text-gray-300 mb-1">Version</label>
-                <input type="number" name="version" id="id_version" min="1" value="1" required
-                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-            </div> {% endcomment %}
 
             <!-- Active Status -->
             <div class="flex items-center">
@@ -144,25 +107,35 @@
                 <label for="id_active" class="ml-2 block text-sm text-gray-300">Active</label>
             </div>
 
-            <!-- Skills Selection -->
-            <div>
-                <label for="id_skills" class="block text-sm font-medium text-gray-300 mb-1">Required Skills</label>
-                <select name="skills" id="id_skills" multiple="multiple" class="w-full">
+            <!-- Mandatory Skills -->
+            <div class="skills-section">
+                <label for="id_mandatory_skills" class="block text-sm font-medium text-gray-300 mb-1">
+                    Mandatory Skills
+                </label>
+                <select name="mandatory_skills" id="id_mandatory_skills" multiple="multiple" class="w-full">
                     {% for skill in skills %}
                         <option value="{{ skill.id }}">{{ skill.title }}</option>
                     {% endfor %}
                 </select>
+                <p id="mandatory-error" class="error-message">Duplicate skills found in Optional Skills.</p>
             </div>
 
-            <!-- Mandatory Skills Toggle -->
-            <div id="selected-skills-container" class="space-y-2 hidden">
-                <p class="text-sm font-medium text-gray-300">Set mandatory skills:</p>
-                <!-- Dynamic content will be added here by JavaScript -->
+            <!-- Optional Skills -->
+            <div class="skills-section">
+                <label for="id_optional_skills" class="block text-sm font-medium text-gray-300 mb-1">
+                    Optional Skills
+                </label>
+                <select name="optional_skills" id="id_optional_skills" multiple="multiple" class="w-full">
+                    {% for skill in skills %}
+                        <option value="{{ skill.id }}">{{ skill.title }}</option>
+                    {% endfor %}
+                </select>
+                <p id="optional-error" class="error-message">Duplicate skills found in Mandatory Skills.</p>
             </div>
 
             <!-- Submit Button -->
             <div class="pt-4">
-                <button type="submit"
+                <button type="submit" id="submitBtn"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
                     Create Job Role
                 </button>
@@ -172,62 +145,62 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        // Initialize Select2 for skills
-        $('#id_skills').select2({
-            placeholder: "Select required skills",
-            allowClear: true,
-            closeOnSelect: false
-        });
-
-        // Function to update dropdown options by hiding selected ones
-        function updateDropdownOptions() {
-            const selectedSkills = $('#id_skills').val() || [];
-            $('#id_skills option').each(function() {
-                const option = $(this);
-                if (selectedSkills.includes(option.val())) {
-                    option.hide();
-                } else {
-                    option.show();
-                }
-            });
-        }
-
-        // When skills selection changes
-        $('#id_skills').on('change', function() {
-            const selectedSkills = $(this).val() || [];
-            const container = $('#selected-skills-container');
-            
-            // Update dropdown to hide selected skills
-            updateDropdownOptions();
-            
-            if (selectedSkills.length > 0) {
-                container.removeClass('hidden');
-                
-                // Clear existing toggles
-                container.find('.mandatory-toggle').remove();
-                
-                // Add a toggle for each selected skill
-                selectedSkills.forEach(skillId => {
-                    const skillName = $(this).find(`option[value="${skillId}"]`).text();
-                    container.append(`
-                        <div class="mandatory-toggle">
-                            <span class="text-gray-300">${skillName}</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" name="mandatory_${skillId}" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <span class="text-sm text-gray-400">Mandatory</span>
-                        </div>
-                    `);
-                });
-            } else {
-                container.addClass('hidden');
-            }
-        });
-
-        // Initial update
-        updateDropdownOptions();
+$(document).ready(function() {
+    // Initialize Select2
+    $('#id_mandatory_skills, #id_optional_skills').select2({
+        placeholder: "Select skills",
+        allowClear: true,
+        closeOnSelect: false
     });
+
+    const $form = $('#jobRoleForm');
+    const $mandatorySkills = $('#id_mandatory_skills');
+    const $optionalSkills = $('#id_optional_skills');
+    const $submitBtn = $('#submitBtn');
+    const $mandatoryError = $('#mandatory-error');
+    const $optionalError = $('#optional-error');
+
+    function checkForDuplicates() {
+        const mandatorySelected = $mandatorySkills.val() || [];
+        const optionalSelected = $optionalSkills.val() || [];
+        
+        // Find duplicates
+        const duplicates = mandatorySelected.filter(skillId => 
+            optionalSelected.includes(skillId)
+        );
+
+        // Update UI based on duplicates
+        if (duplicates.length > 0) {
+            $mandatorySkills.next('.select2-container').find('.select2-selection').addClass('duplicate-warning');
+            $optionalSkills.next('.select2-container').find('.select2-selection').addClass('duplicate-warning');
+            $mandatoryError.show();
+            $optionalError.show();
+            $submitBtn.addClass('submit-disabled').prop('disabled', true);
+            return true;
+        } else {
+            $mandatorySkills.next('.select2-container').find('.select2-selection').removeClass('duplicate-warning');
+            $optionalSkills.next('.select2-container').find('.select2-selection').removeClass('duplicate-warning');
+            $mandatoryError.hide();
+            $optionalError.hide();
+            $submitBtn.removeClass('submit-disabled').prop('disabled', false);
+            return false;
+        }
+    }
+
+    // Check for duplicates on change
+    $mandatorySkills.on('change', checkForDuplicates);
+    $optionalSkills.on('change', checkForDuplicates);
+
+    // Prevent form submission if duplicates exist
+    $form.on('submit', function(e) {
+        if (checkForDuplicates()) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Initial check
+    checkForDuplicates();
+});
 </script>
 {% endblock %}

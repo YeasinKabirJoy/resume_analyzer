@@ -8,7 +8,7 @@ class JobRole(models.Model):
     title = models.CharField(max_length=50)
     minimum_expreience = models.PositiveIntegerField(default=0)
 
-    version = models.PositiveIntegerField(default=1,blank=True)
+    version = models.PositiveIntegerField(blank=True)
     active = models.BooleanField(default=True,blank=True)
 
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,unique=True,editable=False)
@@ -26,14 +26,16 @@ class JobRole(models.Model):
         verbose_name_plural = 'Job Roles'
 
     def __str__(self):
-        return f"{self.title}-V{self.version}"
+        return f"{self.title}-v{self.version}"
     
     def save(self, *args,**kwargs):
         if self._state.adding and not self.version:
             last = JobRole.objects.filter(title=self.title).order_by('-version').first()
+            print("LAST",last)
             self.version = last.version + 1 if last else 1
         if not self.slug:
             base_slug = slugify(self.title)
+            print(f"{base_slug}-v{self.version}")
             self.slug = slugify(f"{base_slug}-v{self.version}")
         return super().save(*args,**kwargs)
     
@@ -66,7 +68,7 @@ class SkillRequirements(models.Model):
         verbose_name_plural = 'Skill Requirements'
 
     def __str__(self):
-        return self.job_role.title + ' | ' + self.skill.title + ' | ' + ('required' if self.is_mandatory else '')
+        return self.job_role.title + '-v' + str(self.job_role.version) +' | ' + self.skill.title + ' | ' + ('required' if self.is_mandatory else '')
 
 
 class Resume(models.Model):
@@ -74,19 +76,20 @@ class Resume(models.Model):
     resume = models.FileField(upload_to='resumes/')
 
     # LLM Output (structured)
-    name = models.CharField(max_length=255, blank=True)
-    email = models.EmailField(blank=True)
-    phone = models.CharField(max_length=20, blank=True)
+    name = models.CharField(max_length=255, blank=True,null=True)
+    email = models.EmailField(blank=True,null=True)
+    phone = models.CharField(max_length=20, blank=True,null=True)
     github = models.URLField(blank=True, null=True)
     linkedin = models.URLField(blank=True,null=True)
     skills = models.JSONField(blank=True, null=True)
     total_experience = models.FloatField(blank=True,default=0.0)  # in years
-    score = models.IntegerField(null=True, blank=True)
+    score = models.IntegerField(blank=True,null=True)
+    reason = models.CharField(max_length=100, blank=True,null=True)
     verdict = models.CharField(max_length=15,choices=[
         ('matched', 'Matched'),
         ('skipped', 'Skipped'),
         ('overqualified', 'Overqualified')
-    ], blank=True)
+    ], blank=True,default='matched')
 
     # Optional: JSON fields to hold LLM structured outputs
     matched_mandatory_skills = models.JSONField(blank=True, null=True)

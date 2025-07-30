@@ -3,54 +3,67 @@ def build_gguf_resume_prompt(resume_text: str, mandatory_skills: list, optional_
     today_date = datetime.now().strftime("%d %b %Y")
 
     prompt_content = f"""
-You are an AI assistant that extracts structured data from resumes.
+    You are an AI assistant that extracts structured data from resumes.
 
-Respond only with a valid JSON object. No explanation or extra text.
+    Respond only with a valid JSON object. No extra text.
 
-Instructions:
+    Extract the following from the resume text:
 
-1. Extract the following:
-   - name, email, phone, github, linkedin (use "" if not found)
-   - all skills listed in the resume (keep original casing and spelling)
-   - experiences: include "designation", "company", "start", "end" (format: "Mon YYYY" or "Present")
+    - **name**: Full name, or "" if not found.
+    - **email**: Email address, or "" if not found.
+    - **phone**: Phone number, or "" if not found.
+    - **github**: GitHub URL or username, or "" if not found.
+    - **linkedin**: LinkedIn URL or username, or "" if not found.
+    - **skills**: Only skills explicitly listed in the Experience and Projects sections. Preserve original casing/spelling.
+    - **experiences**: List of jobs with:
+      - designation: Job title  
+      - company: Company name  
+      - start: "Mon YYYY"  
+      - end: "Mon YYYY" or "Present"
 
-2. Skill Matching:
-   - Match resume skills against the provided lists (case-insensitive)
-   - Consider common aliases (e.g., "DRF" → "django rest framework")
-   - Do not duplicate a skill across mandatory and optional
-   - Use the original skill names from the lists in the output
-   - Add unmatched ones to the respective "missing_*" lists
-   - Match skills only if the exact skill or its common abbreviation appears in the resume text.
-   - Do not guess or infer skills that are not mentioned.
+    Skill Matching:
 
-Mandatory Skills: {', '.join(mandatory_skills)}
-Optional Skills: {', '.join(optional_skills)}
+    - Match skills case-insensitively.
+    - Use common aliases when comparing (e.g., "DRF" → "django rest framework").
+    - A skill is valid only if the skill name or one of its aliases appears in the extracted `skills` list.
+    - No inferred or assumed skills.
+    - Skills matched as mandatory must not be counted again as optional.
 
-3. Output Format:
-{{
-  "name": "",
-  "email": "",
-  "phone": "",
-  "github": "",
-  "linkedin": "",
-  "skills": [],
-  "experiences": [
+    - **Mandatory Skills**: {', '.join(mandatory_skills)}
+      - Add matches to `matched_mandatory`
+      - Add non-matches to `missing_mandatory`
+
+    - **Optional Skills**: {', '.join(optional_skills)}
+      - Match only if not already matched as mandatory
+      - Add matches to `matched_optional`
+      - Add non-matches to `missing_optional`
+
+    Output format:
     {{
-      "designation": "",
-      "company": "",
-      "start": "Jan 2024",
-      "end": "Jul 2024"
+      "name": "",
+      "email": "",
+      "phone": "",
+      "github": "",
+      "linkedin": "",
+      "skills": [],
+      "experiences": [
+        {{
+          "designation": "",
+          "company": "",
+          "start": "Jan 2024",
+          "end": "Jul 2024",
+        }}
+      ],
+      "matched_mandatory": [],
+      "missing_mandatory": [],
+      "matched_optional": [],
+      "missing_optional": []
     }}
-  ],
-  "matched_mandatory": [],
-  "missing_mandatory": [],
-  "matched_optional": [],
-  "missing_optional": []
-}}
 
-Resume:
-{resume_text.strip()}
-""".strip()
+    Resume:
+    {resume_text.strip()}
+    """.strip()
+
 
     gguf_prompt = f"""<|start_header_id|>system<|end_header_id|>
 

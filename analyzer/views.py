@@ -1,7 +1,12 @@
+from math import ceil
 from django.shortcuts import redirect, render
 from .models import *
 from django.db.models import Count,Avg
 from .forms import JobRoleForm
+from utils.analyze import analyze_resume
+from utils.pdf_parser import extract_text_from_pdf
+from utils.experiance_calculate import calculate_total_experience
+from utils.final_score import calculate_final_score
 def home(request):
     all_resume = Resume.objects.all()
     average = all_resume.aggregate(average=Avg('score'))['average']
@@ -16,21 +21,70 @@ def home(request):
         'skipped':skipped,
         'over_qualified':over_qualified,
         'active_job_count':active_job_count,
-        'average_score':average
+        'average_score':round(average,2) if average else 0.0
     }
     return render(request,'home.html',context)
 
 def resume_upload(request):
     if request.method == "POST":
-        pass
-        # print(request.POST.get('job_role'))
-        # print(request.FILES.get('file'))
-        # resume = Resume.objects.create()
-    else:
-        job_role = JobRole.objects.filter(active=True).order_by('title')
-        context = {
-            'job_roles':job_role
-        }
+        job_id = request.POST.get('job_role')
+        job_role = JobRole.objects.get(id=job_id)
+        minimum_expreience_years = job_role.minimum_expreience
+        mandatory = job_role.skill_requirements.filter(is_mandatory=True).values_list('skill__title', flat=True)
+        mandatory_skills = list(mandatory)
+        
+        optional = job_role.skill_requirements.filter(is_mandatory=False).values_list('skill__title', flat=True)
+        optional_skills = list(optional)
+        resume = request.FILES.get('file')
+
+        obj = Resume.objects.create(job_role=job_role,resume=resume)
+        resume_text = extract_text_from_pdf(obj.resume.path)
+        analyzed_response = analyze_resume(resume_text,mandatory_skills,optional_skills)
+        total_experience,individual_experience_years = calculate_total_experience(analyzed_response['experiences'])
+
+        experience_details = analyzed_response["experiences"]
+
+        for i in range(0,len(individual_experience_years)):
+            _ = experience_details[i]
+            _['duration'] = individual_experience_years[i]
+
+        matched_mandatory_skills = analyzed_response["matched_mandatory"]
+        missed_mandatory_skills = analyzed_response["missing_mandatory"]
+        matched_optional_skills = analyzed_response["missing_mandatory"]
+        missed_optional_skills = analyzed_response["missing_optional"]
+
+        obj.name = analyzed_response["name"]
+        obj.email = analyzed_response["email"]
+        obj.phone = analyzed_response["phone"]
+        obj.github = analyzed_response['github']
+        obj.linkedin = analyzed_response["linkedin"]
+        obj.skills = analyzed_response["skills"]
+        obj.experiences = experience_details
+        obj.total_experience = total_experience
+        obj.matched_mandatory_skills = matched_mandatory_skills
+        obj.missed_mandatory_skills = missed_mandatory_skills
+        obj.matched_optional_skills = matched_optional_skills
+        obj.missed_optional_skills = missed_optional_skills
+        
+        final = calculate_final_score(
+            total_experience,
+            minimum_expreience_years,
+            matched_mandatory_skills,
+            missed_mandatory_skills,
+            matched_optional_skills,
+            missed_optional_skills
+            )
+        obj.score = ceil(final["score"])
+        obj.verdict = final["status"]
+        obj.reason = final["reason"]
+
+        obj.save()
+
+    job_role = JobRole.objects.filter(active=True).order_by('title')
+    context = {
+        'job_roles':job_role
+    }
+       
     return render(request,'resume_upload.html',context)
 
 def result(request,id):
@@ -91,9 +145,26 @@ def job_edit(request,id):
 
 def job_create(request):
     if request.method == "POST":
-        print(request.POST)
+        title = request.POST.get('title')
+        minimum_experience = request.POST.get('minimum_experience')
+        active = request.POST.get('active')
+        mandatory_skills = request.POST.getlist('mandatory_skills')
+        optional_skills = request.POST.getlist('optional_skills')
+      
+        job_role = JobRole.objects.create(
+            title=title,
+            minimum_expreience=float(minimum_experience),
+            active =  True if active == "on" else False
+            )
+        
+        for skill in mandatory_skills:
+            obj = Skill.objects.get(id=skill)
+            SkillRequirements.objects.create(job_role=job_role,skill=obj)
+        for skill in optional_skills:
+            obj = Skill.objects.get(id=skill)
+            SkillRequirements.objects.create(job_role=job_role,skill=obj,is_mandatory=False)
+            
     skills = Skill.objects.all()
-
     context = {
         'skills':skills,
     }

@@ -2,20 +2,24 @@ import time
 from llama_cpp import Llama
 from datetime import datetime
 import json
-from llm_promt import build_gguf_resume_prompt
+from .llm_promt import build_gguf_resume_prompt
+import os
+
 # === Configuration ===
-MODEL_PATH = r"models\Llama-3.2-3B-Instruct-UD-Q4_K_XL.gguf"  # Change as needed
+MODEL_PATH = r"models/Llama-3.2-3B-Instruct-UD-Q6_K_XL.gguf" # Change as needed
 
 def analyze_resume(resume_text, mandatory_skills, optional_skills):
     gguf_prompt = build_gguf_resume_prompt(resume_text, mandatory_skills, optional_skills)
 
     N_TOKENS = 1024
-    N_THREADS = 16  # Set based on your CPU (e.g. os.cpu_count())
-
+    
     llm = Llama(
         model_path=MODEL_PATH,
-        n_ctx=2048,
-        n_threads=N_THREADS
+        n_ctx=2048,        
+        n_threads=os.cpu_count(),       
+        n_batch=64,        
+        use_mlock=True,    
+        use_mmap=True, 
     )
 
     print("Generating response...")
