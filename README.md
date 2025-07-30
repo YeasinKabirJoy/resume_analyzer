@@ -109,3 +109,11 @@ Change the LLM model name
     $ python manage.py runserver
 #### Open your browser and go to
    http://127.0.0.1:8000
+
+
+
+## 📌 Future Improvements
+
+- 🔐 User authentication  
+- 📁 CSV export of results  
+- 🤖 LLM fine-tuning for more accurate skill extraction  
