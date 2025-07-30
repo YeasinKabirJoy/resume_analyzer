@@ -92,7 +92,7 @@ https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2
 Move the downloaded LLM to projects models folder.
 
 
-If you want to use different model then you change the following file.
+If you want to use different model then change the following file.
 
      utils -> analyze.py 
 
