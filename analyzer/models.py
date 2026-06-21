@@ -6,7 +6,7 @@ from django.utils.text import slugify
 
 class JobRole(models.Model):
     title = models.CharField(max_length=50)
-    minimum_expreience = models.PositiveIntegerField(default=0)
+    minimum_experience = models.PositiveIntegerField(default=0)
 
     version = models.PositiveIntegerField(blank=True)
     active = models.BooleanField(default=True,blank=True)
@@ -31,17 +31,16 @@ class JobRole(models.Model):
     def save(self, *args,**kwargs):
         if self._state.adding and not self.version:
             last = JobRole.objects.filter(title=self.title).order_by('-version').first()
-            print("LAST",last)
             self.version = last.version + 1 if last else 1
         if not self.slug:
             base_slug = slugify(self.title)
-            print(f"{base_slug}-v{self.version}")
             self.slug = slugify(f"{base_slug}-v{self.version}")
         return super().save(*args,**kwargs)
     
 
 class Skill(models.Model):
     title = models.CharField(max_length=50)
+    aliases = models.JSONField(default=list, blank=True)
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,unique=True,editable=False)
     
     class Meta:
@@ -75,7 +74,6 @@ class Resume(models.Model):
     job_role = models.ForeignKey('JobRole', on_delete=models.CASCADE)
     resume = models.FileField(upload_to='resumes/')
 
-    # LLM Output (structured)
     name = models.CharField(max_length=255, blank=True,null=True)
     email = models.EmailField(blank=True,null=True)
     phone = models.CharField(max_length=20, blank=True,null=True)
@@ -83,6 +81,9 @@ class Resume(models.Model):
     linkedin = models.URLField(blank=True,null=True)
     skills = models.JSONField(blank=True, null=True)
     total_experience = models.FloatField(blank=True,default=0.0)  # in years
+    confidence_score = models.FloatField(blank=True, null=True)
+    text_quality_score = models.FloatField(blank=True, null=True)
+    error_message = models.TextField(blank=True, null=True)
     score = models.IntegerField(blank=True,null=True)
     reason = models.CharField(max_length=100, blank=True,null=True)
     verdict = models.CharField(max_length=15,choices=[
@@ -91,7 +92,7 @@ class Resume(models.Model):
         ('overqualified', 'Overqualified')
     ], blank=True,default='matched')
 
-    # Optional: JSON fields to hold LLM structured outputs
+    # Structured pipeline outputs
     matched_mandatory_skills = models.JSONField(blank=True, null=True)
     missed_mandatory_skills = models.JSONField(blank=True, null=True)
     matched_optional_skills = models.JSONField(blank=True, null=True)
@@ -99,16 +100,17 @@ class Resume(models.Model):
     experiences = models.JSONField(blank=True, null=True)  # list of dicts: designation, company, duration
 
     status = models.CharField(
-    max_length=15,
-    choices=[
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ],
-    default='pending'
+        max_length=15,
+        choices=[
+            ('pending', 'Pending'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed'),
+        ],
+        default='pending'
     )
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(blank=True, null=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     class Meta:

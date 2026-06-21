@@ -1,12 +1,11 @@
-from math import ceil
 from django.shortcuts import redirect, render
 from .models import *
 from django.db.models import Count,Avg
 from .forms import JobRoleForm
-from utils.analyze import analyze_resume
-from utils.pdf_parser import extract_text_from_pdf
-from utils.experiance_calculate import calculate_total_experience
-from utils.final_score import calculate_final_score
+from django.utils import timezone
+from services.pipeline import process_resume
+
+
 def home(request):
     all_resume = Resume.objects.all()
     average = all_resume.aggregate(average=Avg('score'))['average']
@@ -29,56 +28,21 @@ def resume_upload(request):
     if request.method == "POST":
         job_id = request.POST.get('job_role')
         job_role = JobRole.objects.get(id=job_id)
-        minimum_expreience_years = job_role.minimum_expreience
-        mandatory = job_role.skill_requirements.filter(is_mandatory=True).values_list('skill__title', flat=True)
-        mandatory_skills = list(mandatory)
-        
-        optional = job_role.skill_requirements.filter(is_mandatory=False).values_list('skill__title', flat=True)
-        optional_skills = list(optional)
         resume = request.FILES.get('file')
 
         obj = Resume.objects.create(job_role=job_role,resume=resume)
-        resume_text = extract_text_from_pdf(obj.resume.path)
-        analyzed_response = analyze_resume(resume_text,mandatory_skills,optional_skills)
-        total_experience,individual_experience_years = calculate_total_experience(analyzed_response['experiences'])
-
-        experience_details = analyzed_response["experiences"]
-
-        for i in range(0,len(individual_experience_years)):
-            _ = experience_details[i]
-            _['duration'] = individual_experience_years[i]
-
-        matched_mandatory_skills = analyzed_response["matched_mandatory"]
-        missed_mandatory_skills = analyzed_response["missing_mandatory"]
-        matched_optional_skills = analyzed_response["missing_mandatory"]
-        missed_optional_skills = analyzed_response["missing_optional"]
-
-        obj.name = analyzed_response["name"]
-        obj.email = analyzed_response["email"]
-        obj.phone = analyzed_response["phone"]
-        obj.github = analyzed_response['github']
-        obj.linkedin = analyzed_response["linkedin"]
-        obj.skills = analyzed_response["skills"]
-        obj.experiences = experience_details
-        obj.total_experience = total_experience
-        obj.matched_mandatory_skills = matched_mandatory_skills
-        obj.missed_mandatory_skills = missed_mandatory_skills
-        obj.matched_optional_skills = matched_optional_skills
-        obj.missed_optional_skills = missed_optional_skills
-        
-        final = calculate_final_score(
-            total_experience,
-            minimum_expreience_years,
-            matched_mandatory_skills,
-            missed_mandatory_skills,
-            matched_optional_skills,
-            missed_optional_skills
-            )
-        obj.score = ceil(final["score"])
-        obj.verdict = final["status"]
-        obj.reason = final["reason"]
-
+        try:
+            analyzed_response = process_resume(obj)
+            for field, value in analyzed_response.items():
+                setattr(obj, field, value)
+            obj.status = "completed"
+            obj.error_message = None
+        except Exception as exc:
+            obj.status = "failed"
+            obj.error_message = str(exc)
+        obj.processed_at = timezone.now()
         obj.save()
+        return redirect('result', id=obj.id)
 
     job_role = JobRole.objects.filter(active=True).order_by('title')
     context = {
@@ -153,8 +117,8 @@ def job_create(request):
       
         job_role = JobRole.objects.create(
             title=title,
-            minimum_expreience=float(minimum_experience),
-            active =  True if active == "on" else False
+            minimum_experience=float(minimum_experience),
+            active=True if active == "on" else False
             )
         
         for skill in mandatory_skills:

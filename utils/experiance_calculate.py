@@ -15,7 +15,6 @@ def calculate_total_experience(experiences):
         months = (end.year - start.year) * 12 + (end.month - start.month) + 1
         experiance.append(round(months/12,2))
         total_months += months
-    print(experiance)
     total_years = total_months / 12
     return round(total_years, 2),experiance
 

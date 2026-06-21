@@ -10,7 +10,9 @@ def calculate_final_score(experience_years,required_years,matched_mandatory,miss
         skill_weight = 60
 
     # --- Experience Score ---
-    if experience_years >= required_years:
+    if required_years <= 0:
+        experience_score = exp_weight
+    elif experience_years >= required_years:
         experience_score = exp_weight
     else:
         experience_score = exp_weight * (experience_years / required_years)

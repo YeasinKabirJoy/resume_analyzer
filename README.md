@@ -1,66 +1,66 @@
-# 📄 Resume Analyzer
+﻿# ðŸ“„ Resume Analyzer
 
-**Resume Analyzer** is a web application built with **Python** and **Django** that allows users to upload resumes and evaluate them against specific job roles. The analysis is powered by a **Large Language Model (LLM)** to extract relevant skills and experience from resumes.
+**Resume Analyzer** is a web application built with **Python** and **Django** that allows users to upload resumes and evaluate them against specific job roles. The analysis uses an ATS-first rules-based pipeline to extract structured resume data and match it against job requirements.
 
 ---
 
-## 🚀 Features
+## ðŸš€ Features
 
-- 📤 Upload a **PDF Resume** and select a **Job Role**.
-- 🤖 Analyze resumes using an **LLM** to extract:
+- ðŸ“¤ Upload a **PDF Resume** and select a **Job Role**.
+- ðŸ¤– Analyze resumes using an **LLM** to extract:
   - Personal information
   - Skills (matched/missed)
   - Experience history and total experience
-- 🎯 Compare extracted resume data with job role requirements:
+- ðŸŽ¯ Compare extracted resume data with job role requirements:
   - Minimum experience
   - **Mandatory** and **Optional** skills
-- 📈 Generate a **Resume Score** and **Verdict**:
+- ðŸ“ˆ Generate a **Resume Score** and **Verdict**:
   - `Matched`
   - `Skipped`
   - `Overqualified`
-- 📝 Display original uploaded PDF alongside analysis
-- 🔄 **Versioned Job Roles**: If a role with the same title is created again, it's saved as `v2`, `v3`, etc.
-- 📚 Manage:
+- ðŸ“ Display original uploaded PDF alongside analysis
+- ðŸ”„ **Versioned Job Roles**: If a role with the same title is created again, it's saved as `v2`, `v3`, etc.
+- ðŸ“š Manage:
   - Job Roles (title, required experience, mandatory & optional skills)
   - Skills (by title)
   - Submitted resumes per job role, viewable individually
 
 ---
 
-## 🖼️ Screenshots
+## ðŸ–¼ï¸ Screenshots
 
-<!-- ✅ Add screenshots or diagrams here -->
-### 📤 Dashboard
+<!-- âœ… Add screenshots or diagrams here -->
+### ðŸ“¤ Dashboard
 <img src="preview/dashboard.png" alt="Dashboard" width="700"/>
 
-### 📤 Resume Upload (Click Analyze)
+### ðŸ“¤ Resume Upload (Click Analyze)
 <img src="preview/analyze_upload.png" alt="Resume Upload" width="700"/>
 
-### 📤 Active Jobs 
+### ðŸ“¤ Active Jobs 
 <img src="preview/active_job.png" alt="Active Jobs" width="700"/>
 
-### 📤 Resumes (Click View All Resumes)
+### ðŸ“¤ Resumes (Click View All Resumes)
 <img src="preview/all_resume.png" alt="All Resumes" width="700"/>
 
-### 📤 Resume Details (Click View Details)
+### ðŸ“¤ Resume Details (Click View Details)
 <img src="preview/resume_details.png" alt="Resume Details" width="700"/>
 
-### 📤 Job Role Create (Active Jobs -> Create Jobs)
+### ðŸ“¤ Job Role Create (Active Jobs -> Create Jobs)
 <img src="preview/job_role_create.png" alt="Job Role Create" width="700"/>
 
-### 📤 Skills Add/Edit
+### ðŸ“¤ Skills Add/Edit
 <img src="preview/skills_crud.png" alt="Skills Crud" width="700"/>
 ---
 
-## 🛠️ Tech Stack
+## ðŸ› ï¸ Tech Stack
 
 - **Backend**: Python, Django
-- **AI/ML**: LLM (for resume parsing and evaluation) using llama-cpp-python
+- **AI/ML**: ATS-style rules-based extraction and matching
 - **Frontend**: Django Templates 
 - **Database**: SQLite
 ---
 
-## 🧪 Setup Instructions
+## ðŸ§ª Setup Instructions
 
 Follow these steps to set up the project locally.
 
@@ -85,21 +85,6 @@ If your project is already in an existing python3 virtualenv first install djang
 ### Install Dependencies
     $ pip install -r requirements.txt
 
-### Download the LLM
-https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-UD-Q6_K_XL.gguf?download=true
-
-### Move to models Folder
-Move the downloaded LLM to projects models folder.
-
-
-If you want to use different model then change the following file.
-
-     utils -> analyze.py 
-
-Change the LLM model name
-
-<img src="preview/different_model.png" alt="Using Different Model" width="700"/>
-    
 ### Running the Project
 
 #### Apply database migrations
@@ -112,8 +97,8 @@ Change the LLM model name
 
 
 
-## 📌 Future Improvements
+## ðŸ“Œ Future Improvements
 
-- 🔐 User authentication  
-- 📁 CSV export of results  
-- 🤖 LLM fine-tuning for more accurate skill extraction  
+- ðŸ” User authentication  
+- ðŸ“ CSV export of results  
+- ðŸ¤– LLM fine-tuning for more accurate skill extraction  
