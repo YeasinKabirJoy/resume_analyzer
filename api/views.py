@@ -23,6 +23,9 @@ class ResumeUploadView(APIView):
             except Exception as exc:
                 resume.status = "failed"
                 resume.error_message = str(exc)
+                resume.score = 0
+                resume.verdict = "skipped"
+                resume.reason = str(exc)
                 response_status = status.HTTP_422_UNPROCESSABLE_ENTITY
             resume.processed_at = timezone.now()
             resume.save()

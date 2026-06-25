@@ -1,9 +1,12 @@
 from django.shortcuts import redirect, render
 from .models import *
 from django.db.models import Count,Avg
-from .forms import JobRoleForm
+from .forms import JobRoleForm, SkillForm
 from django.utils import timezone
 from services.pipeline import process_resume
+from django.http import HttpResponse
+import fitz
+from io import BytesIO
 
 
 def home(request):
@@ -40,6 +43,9 @@ def resume_upload(request):
         except Exception as exc:
             obj.status = "failed"
             obj.error_message = str(exc)
+            obj.score = 0
+            obj.verdict = "skipped"
+            obj.reason = str(exc)
         obj.processed_at = timezone.now()
         obj.save()
         return redirect('result', id=obj.id)
@@ -57,6 +63,20 @@ def result(request,id):
         "resume": resume_data
     }
     return render(request,'result.html',context)
+
+
+def resume_preview(request, id):
+    resume_data = Resume.objects.get(id=id)
+    pdf_path = resume_data.resume.path
+
+    with fitz.open(pdf_path) as document:
+        if document.page_count == 0:
+            return HttpResponse(status=404)
+        page = document.load_page(0)
+        pixmap = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5), alpha=False)
+        image_bytes = pixmap.tobytes("png")
+
+    return HttpResponse(image_bytes, content_type="image/png")
 
 def jobs(request):
     title = ''
@@ -148,12 +168,16 @@ def resumes(request,id):
 
 
 def skill(request):
+    form = SkillForm()
     if request.method == "POST":
-        title =  request.POST.get('skill_name')
-        Skill.objects.create(title=title)
+        form = SkillForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('skills')
     skills = Skill.objects.all()
     context = {
         'skills':skills,
+        'form': form,
     }
     return render(request,'skill.html',context)
 
@@ -161,13 +185,17 @@ def skill(request):
 def skill_edit(request):
     if request.method == "POST":
         id =  request.POST.get('skill_id')
-        title =  request.POST.get('skill_name')
         obj = Skill.objects.get(id=id)
-        obj.title = title
-        obj.save()
+        form = SkillForm(request.POST, instance=obj)
+        if form.is_valid():
+            form.save()
+            return redirect('skills')
+    else:
+        form = SkillForm()
     skills = Skill.objects.all()
     context = {
         'skills':skills,
+        'form': form,
     }
     return render(request,'skill.html',context)
 

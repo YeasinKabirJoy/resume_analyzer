@@ -10,6 +10,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='resume',
+            name='educations',
+            field=models.JSONField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='resume',
             name='confidence_score',
             field=models.FloatField(blank=True, null=True),
         ),

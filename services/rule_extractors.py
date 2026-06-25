@@ -6,10 +6,7 @@ from .normalizer import normalize_for_match, normalize_whitespace, title_case_na
 
 EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+", re.IGNORECASE)
 GITHUB_PATTERN = re.compile(r"(?:https?://)?(?:www\.)?github\.com/([A-Za-z0-9_.-]+)", re.IGNORECASE)
-LINKEDIN_PATTERN = re.compile(
-    r"(?:https?://)?(?:www\.)?linkedin\.com/(?:in|pub)/([A-Za-z0-9_.-]+)",
-    re.IGNORECASE,
-)
+LINKEDIN_PATTERN = re.compile(r"(?:https?://)?(?:www\.)?linkedin\.com/(?:in|pub)/([A-Za-z0-9_.-]+)", re.IGNORECASE)
 SECTION_HEADERS = OrderedDict(
     [
         ("summary", ["summary", "profile", "professional summary", "objective"]),
@@ -38,6 +35,7 @@ MONTH_NAMES = {
     "august": 8,
     "sep": 9,
     "september": 9,
+    "sept": 9,
     "oct": 10,
     "october": 10,
     "nov": 11,
@@ -46,20 +44,21 @@ MONTH_NAMES = {
     "december": 12,
 }
 DATE_RANGE_PATTERN = re.compile(
-    r"(?P<start>(?:\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}\b|\b\d{4}\b))\s*"
+    r"(?P<start>(?:\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*[-\s]+\d{2,4}\b|\b\d{4}\b))\s*"
     r"(?:-|–|—|to)\s*"
-    r"(?P<end>(?:present|current|now|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+\d{4}\b|\b\d{4}\b))",
+    r"(?P<end>(?:present|current|now|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*[-\s]+\d{2,4}\b|\b\d{4}\b))",
     re.IGNORECASE,
 )
 
 
 def extract_contacts(text: str) -> dict:
-    email_match = EMAIL_PATTERN.search(text or "")
+    lines = [normalize_whitespace(line) for line in (text or "").splitlines()]
+    email_match = select_best_email(lines)
     github_match = GITHUB_PATTERN.search(text or "")
     linkedin_match = LINKEDIN_PATTERN.search(text or "")
 
     return {
-        "email": email_match.group(0) if email_match else "",
+        "email": email_match or "",
         "phone": extract_phone(text),
         "github": f"https://github.com/{github_match.group(1)}" if github_match else "",
         "linkedin": f"https://www.linkedin.com/in/{linkedin_match.group(1)}" if linkedin_match else "",
@@ -67,13 +66,38 @@ def extract_contacts(text: str) -> dict:
 
 
 def extract_phone(text: str) -> str:
-    phone_pattern = re.compile(
-        r"(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)\d{3,4}[\s.-]?\d{4}(?!\d)"
-    )
+    phone_pattern = re.compile(r"(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)\d{3,4}[\s.-]?\d{4}(?!\d)")
     match = phone_pattern.search(text or "")
     if not match:
         return ""
     return normalize_whitespace(match.group(0))
+
+
+def select_best_email(lines: list[str]) -> str:
+    candidates = []
+    in_reference_block = False
+
+    for index, line in enumerate(lines):
+        lowered = normalize_for_match(line)
+        if lowered in {"reference", "references"}:
+            in_reference_block = True
+            continue
+        for match in EMAIL_PATTERN.finditer(line):
+            score = 1000 - index
+            if index <= 8:
+                score += 200
+            if in_reference_block:
+                score -= 500
+            if any(keyword in lowered for keyword in ["summary", "experience", "education", "skills"]):
+                score -= 25
+            candidates.append((score, index, match.group(0)))
+
+    if not candidates:
+        fallback = EMAIL_PATTERN.search("\n".join(lines))
+        return fallback.group(0) if fallback else ""
+
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+    return candidates[0][2]
 
 
 def extract_name(text: str, fallback_contacts: dict | None = None) -> str:
@@ -197,22 +221,26 @@ def normalize_date_token(value: str) -> str:
     normalized = normalize_whitespace(value)
     if not normalized:
         return ""
-    if normalized.lower() in {"present", "current", "now"}:
+    lowered = normalized.lower()
+    if lowered in {"present", "current", "now"}:
         return "Present"
     if normalized.isdigit() and len(normalized) == 4:
         return f"Jan {normalized}"
-    month_token, _, year_token = normalized.partition(" ")
-    if month_token.isdigit() and not year_token:
-        return f"Jan {month_token}"
-    if month_token.isdigit() and year_token.isdigit():
-        return f"Jan {month_token}"
-    if year_token.isdigit():
-        month_key = month_token.lower().rstrip(".")
+
+    normalized = normalized.replace(" ", "-")
+    parts = [part for part in normalized.split("-") if part]
+    if len(parts) == 2:
+        month_key = parts[0].lower().rstrip(".")
+        year_token = parts[1]
         month_number = MONTH_NAMES.get(month_key)
         if month_number:
+            if len(year_token) == 2:
+                year_token = f"20{year_token}"
             month_name = datetime(2000, month_number, 1).strftime("%b")
             return f"{month_name} {year_token}"
-    return normalized
+        if parts[0].isdigit():
+            return f"Jan {parts[0]}"
+    return normalized.replace("-", " ")
 
 
 def _looks_like_name(line: str) -> bool:
@@ -225,10 +253,7 @@ def _looks_like_name(line: str) -> bool:
     blocked = {"resume", "cv", "curriculum vitae", "summary", "experience", "education", "skills"}
     if lowered in blocked:
         return False
-    return all(
-        token[:1].isalpha() and (token[:1].isupper() or token.isupper())
-        for token in tokens
-    )
+    return all(token[:1].isalpha() and (token[:1].isupper() or token.isupper()) for token in tokens)
 
 
 def _looks_like_location(line: str) -> bool:

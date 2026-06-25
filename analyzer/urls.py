@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import home,resume_upload,result,jobs,job_details,job_edit,job_create,resumes,skill,skill_edit,skill_delete
+from .views import home,resume_upload,result,resume_preview,jobs,job_details,job_edit,job_create,resumes,skill,skill_edit,skill_delete
 urlpatterns = [
     path('upload/', resume_upload,name='resume_upload'),
     path('result/<uuid:id>',result,name='result'),
+    path('preview/<uuid:id>/', resume_preview, name='resume_preview'),
     path('',home,name='home'),
     path('jobs/',jobs,name='active_jobs'),
     path('jobs/create/',job_create,name='job_create'),

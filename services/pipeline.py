@@ -1,4 +1,5 @@
-from services.rule_extractors import extract_contacts, extract_experiences, extract_name, extract_sections
+from services.ner_extractor import extract_educations, extract_experiences
+from services.rule_extractors import extract_contacts, extract_name, extract_sections
 from services.scorer import score_resume
 from services.skill_matcher import match_skills
 from utils.experiance_calculate import calculate_total_experience
@@ -7,9 +8,6 @@ from utils.pdf_parser import extract_text_from_pdf
 
 def process_resume(resume_record):
     text = extract_text_from_pdf(resume_record.resume.path)
-    if not text or len(text.strip()) < 200:
-        raise ValueError("Extracted resume text is too short for ATS analysis.")
-
     return analyze_text(text, resume_record.job_role)
 
 
@@ -17,6 +15,7 @@ def analyze_text(resume_text, job_role):
     sections = extract_sections(resume_text)
     contacts = extract_contacts(resume_text)
     experiences = extract_experiences(resume_text)
+    educations = extract_educations(resume_text)
     name = extract_name(resume_text, contacts)
 
     skill_requirements = list(job_role.skill_requirements.select_related("skill").all())
@@ -55,6 +54,7 @@ def analyze_text(resume_text, job_role):
         "reason": final_score["reason"],
         "confidence_score": confidence_score,
         "text_quality_score": text_quality_score,
+        "educations": educations,
     }
 
 

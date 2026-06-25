@@ -98,6 +98,7 @@ class Resume(models.Model):
     matched_optional_skills = models.JSONField(blank=True, null=True)
     missed_optional_skills = models.JSONField(blank=True, null=True)
     experiences = models.JSONField(blank=True, null=True)  # list of dicts: designation, company, duration
+    educations = models.JSONField(blank=True, null=True)
 
     status = models.CharField(
         max_length=15,

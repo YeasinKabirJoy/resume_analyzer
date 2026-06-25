@@ -5,29 +5,33 @@
 {% block content %}
 <div class="content">
   <div class="flex flex-col lg:flex-row gap-6 max-w-screen-2xl mx-auto py-6">
-
-    <!-- LEFT: Structured Resume Data -->
     <div class="flex-[1.5] bg-gray-800 rounded-lg p-6 space-y-4 shadow-md overflow-y-auto max-h-[85vh]">
-      <h2 class="text-2xl font-semibold mb-4">Resume Summary ({{resume.job_role.title}}-v{{resume.job_role.version}}) </h2>
+      <h2 class="text-2xl font-semibold mb-4">Resume Summary ({{ resume.job_role.title }}-v{{ resume.job_role.version }})</h2>
 
-      <div><span class="font-medium">Name:</span> {{ resume.name }}</div>
-      <div><span class="font-medium">Email:</span> {{ resume.email }}</div>
-      <div><span class="font-medium">Phone:</span> {{ resume.phone }}</div>
+      <div><span class="font-medium">Name:</span> {{ resume.name|default:"" }}</div>
+      <div><span class="font-medium">Email:</span> {{ resume.email|default:"" }}</div>
+      <div><span class="font-medium">Phone:</span> {{ resume.phone|default:"" }}</div>
 
       <div><span class="font-medium">GitHub:</span>
         {% if resume.github %}
           <a href="{{ resume.github }}" class="text-blue-400 underline" target="_blank">{{ resume.github }}</a>
-        {% else %}—{% endif %}
+        {% else %}&mdash;{% endif %}
       </div>
 
       <div><span class="font-medium">LinkedIn:</span>
         {% if resume.linkedin %}
           <a href="{{ resume.linkedin }}" class="text-blue-400 underline" target="_blank">{{ resume.linkedin }}</a>
-        {% else %}—{% endif %}
+        {% else %}&mdash;{% endif %}
       </div>
 
       <div><span class="font-medium">Job Role:</span> {{ resume.job_role.title }} (v{{ resume.job_role.version }})</div>
       <div><span class="font-medium">Total Experience:</span> {{ resume.total_experience }} years</div>
+      <div><span class="font-medium">Status:</span> {{ resume.status|capfirst }}</div>
+      <div><span class="font-medium">Confidence:</span> {{ resume.confidence_score|default:"—" }}</div>
+      <div><span class="font-medium">Text Quality:</span> {{ resume.text_quality_score|default:"—" }}</div>
+      {% if resume.error_message %}
+        <div class="text-red-400"><span class="font-medium">Error:</span> {{ resume.error_message }}</div>
+      {% endif %}
 
       <div><span class="font-medium">Verdict:</span>
         {% if resume.verdict == 'matched' %}
@@ -56,7 +60,6 @@
 
       <hr class="border-gray-700 my-4">
 
-      <!-- Skills -->
       <div>
         <h3 class="text-lg font-semibold mb-1">Skills</h3>
         <div class="text-sm space-y-1">
@@ -67,7 +70,6 @@
         </div>
       </div>
 
-      <!-- Experiences -->
       {% if resume.experiences %}
         <hr class="border-gray-700 my-4">
         <div>
@@ -79,19 +81,38 @@
           </ul>
         </div>
       {% endif %}
+
+      {% if resume.educations %}
+        <hr class="border-gray-700 my-4">
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Education Details</h3>
+          <ul class="text-sm list-disc ml-5 space-y-1">
+            {% for edu in resume.educations %}
+              <li>
+                <span class="font-medium">{{ edu.degree }}</span>
+                {% if edu.institution %} at {{ edu.institution }}{% endif %}
+                {% if edu.result %} ({{ edu.result }}){% endif %}
+                {% if edu.year %} - {{ edu.year }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
     </div>
 
-    <!-- RIGHT: PDF Preview -->
-    <div class="flex-1 h-[85vh] bg-gray-800 rounded-lg overflow-hidden shadow-md">
-      <iframe 
-        src="{{ resume.resume.url }}" 
-        class="w-full h-full"
-        frameborder="0">
-        Your browser does not support PDFs. 
-        <a href="{{ resume.resume.url }}">Download PDF</a>
-      </iframe>
+    <div class="flex-1 h-[85vh] bg-gray-800 rounded-lg overflow-hidden shadow-md p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-semibold">PDF Preview</h3>
+        <a href="{{ resume.resume.url }}" target="_blank" class="text-blue-400 underline text-sm">Open PDF</a>
+      </div>
+      <div class="h-[calc(85vh-4rem)] bg-gray-900 rounded overflow-auto flex items-start justify-center p-2">
+        <img
+          src="{% url 'resume_preview' id=resume.id %}"
+          alt="Resume preview"
+          class="max-w-full h-auto rounded shadow-lg"
+        >
+      </div>
     </div>
-
   </div>
 </div>
 {% endblock %}
