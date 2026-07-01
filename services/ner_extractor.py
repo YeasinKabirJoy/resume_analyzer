@@ -107,7 +107,7 @@ def extract_experiences(text: str) -> list[dict]:
 def extract_educations(text: str) -> list[dict]:
     sections = extract_sections(text)
     education_text = sections.get("education") or text or ""
-    records = _extract_ner_first_section_records(education_text, mode="education")
+    records = _extract_ner_first_education_records(education_text)
     records = [record for record in records if _is_valid_education_record(record)]
     if records:
         print("EDUCATION EXTRACTED BY: NER-FIRST")
@@ -139,6 +139,53 @@ def _extract_ner_first_section_records(section_text: str, mode: str) -> list[dic
 
         if record and record not in records:
             records.append(record)
+
+    return records
+
+
+def _extract_ner_first_education_records(section_text: str) -> list[dict]:
+    lines = [normalize_whitespace(line) for line in (section_text or "").splitlines()]
+    lines = [line for line in lines if line]
+    if not lines:
+        return []
+
+    records = []
+
+    for index, line in enumerate(lines):
+        split_degree, split_institution = _split_mixed_education_line(line)
+        split_result, result_institution = _split_result_institution_line(line)
+        is_degree_line = bool(split_degree) or _looks_like_degree(line)
+        is_institution_line = bool(split_institution) or bool(result_institution) or _looks_like_institution(line)
+        is_result_line = bool(split_result) or _looks_like_result(line)
+
+        if not is_degree_line and not is_institution_line and not is_result_line:
+            continue
+
+        window = lines[max(0, index - 2) : min(len(lines), index + 5)]
+        degree = split_degree or (_clean_education_component(line) if _looks_like_degree(line) else "")
+        institution = split_institution or result_institution or (_clean_education_component(line) if _looks_like_institution(line) and not _looks_like_degree(line) else "")
+        result = split_result or _extract_result_phrase(line) or next((candidate for candidate in window if candidate != line and _looks_like_result(candidate)), "")
+
+        if not degree:
+            degree = next((candidate for candidate in window if candidate != line and _looks_like_degree(candidate) and not _looks_like_result(candidate)), "")
+        if not institution:
+            institution = next((candidate for candidate in window if candidate != line and (_looks_like_institution(candidate) or infer_line_entities(candidate)["company"]) and not _looks_like_result(candidate)), "")
+
+        year_match = next((re.search(r"\b(19|20)\d{2}\b", candidate) for candidate in window if re.search(r"\b(19|20)\d{2}\b", candidate)), None)
+        year = year_match.group(0) if year_match else ""
+
+        record = {
+            "degree": _clean_education_component(degree),
+            "institution": _clean_education_component(institution),
+            "result": normalize_whitespace(result),
+            "year": year,
+        }
+
+        if record["degree"] or record["institution"] or record["result"] or record["year"]:
+            if records and _can_merge_education_records(records[-1], record):
+                records[-1] = _merge_education_records(records[-1], record)
+            elif record not in records:
+                records.append(record)
 
     return records
 
@@ -390,7 +437,7 @@ def rule_extract_educations(text: str) -> list[dict]:
         if not is_degree_line and not is_institution_line and not is_result_line:
             continue
 
-        window = lines[max(0, index - 2) : min(len(lines), index + 3)]
+        window = lines[max(0, index - 2) : min(len(lines), index + 5)]
         degree = split_degree or (_clean_education_component(line) if _looks_like_degree(line) else "")
         institution = split_institution or result_institution or (_clean_education_component(line) if _looks_like_institution(line) and not _looks_like_degree(line) else "")
         result = split_result or _extract_result_phrase(line) or next((candidate for candidate in window if candidate != line and _looks_like_result(candidate)), "")

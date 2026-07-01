@@ -1,165 +1,106 @@
 {% extends "base.html" %}
 
 {% block style %}
-    /* Skill Management Styles */
     .skill-container {
-        max-width: 600px;
+        max-width: 700px;
         margin: 0 auto;
     }
 
-    .skill-input-container {
-        background-color: #1f2937;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid #374151;
-    }
-
-    .skill-list {
-        background-color: #1f2937;
-        border-radius: 0.5rem;
-        border: 1px solid #374151;
-        overflow: hidden;
-    }
-
-    .skill-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #374151;
-        transition: background-color 0.2s ease;
-    }
-
-    .skill-item:last-child {
-        border-bottom: none;
-    }
-
-    .skill-item:hover {
-        background-color: #374151;
-    }
-
-    .skill-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .skill-actions button {
-        padding: 0.35rem 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        transition: opacity 0.2s ease;
-    }
-
-    .edit-btn {
-        background-color: #3b82f6;
-        color: white;
-    }
-
-    .delete-btn {
-        background-color: #ef4444;
-        color: white;
-    }
-
-    /* Modal Styles */
     .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: rgba(2, 6, 23, 0.8);
+        backdrop-filter: blur(8px);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 1000;
     }
-
-    .modal-content {
-        background-color: #1f2937;
-        padding: 2rem;
-        border-radius: 0.5rem;
-        width: 90%;
-        max-width: 400px;
-        border: 1px solid #374151;
-    }
-
-    .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
 {% endblock %}
 
 {% block content %}
 <div class="content">
-    <div class="skill-container">
+    <div class="skill-container space-y-8">
+        
         <!-- Add Skill Form -->
-        <div class="skill-input-container">
-            <h2 class="text-xl font-semibold text-gray-100 mb-4">Add New Skill</h2>
-            <form method="post" class="space-y-3" action={% url 'skills' %}>
+        <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-2xl rounded-2xl p-6">
+            <h2 class="text-2xl font-extrabold text-white mb-4">Add New Skill</h2>
+            <form method="post" class="space-y-4" action="{% url 'skills' %}">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-sm text-gray-300 mb-1" for="{{ form.title.id_for_label }}">Skill Name</label>
-                    {{ form.title }}
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5" for="{{ form.title.id_for_label }}">Skill Name</label>
+                    <input type="text" name="title" id="{{ form.title.id_for_label }}" required
+                           class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-300 mb-1" for="{{ form.aliases.id_for_label }}">Aliases</label>
-                    {{ form.aliases }}
-                    <p class="text-xs text-gray-400 mt-1">Optional. Use comma or newline separated aliases.</p>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5" for="{{ form.aliases.id_for_label }}">Aliases</label>
+                    <textarea name="aliases" id="{{ form.aliases.id_for_label }}" rows="2"
+                              class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm"
+                              placeholder="e.g. drf, django rest framework"></textarea>
+                    <p class="text-xs text-gray-500 mt-1.5">Optional. Use comma or newline separated aliases.</p>
                 </div>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition">
+                <button type="submit" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-indigo-500/10 active:scale-[0.98]">
                     Add Skill
                 </button>
             </form>
         </div>
 
         <!-- Skills List -->
-        <div class="skill-list">
-            <h2 class="text-xl font-semibold text-gray-100 p-4 border-b border-gray-700">Your Skills</h2>
-            {% for skill in skills %}
-            <div class="skill-item">
-                <div>
-                    <span class="text-gray-100">{{ skill.title }}</span>
-                    {% if skill.aliases %}
-                        <p class="text-xs text-gray-400 mt-1">Aliases: {{ skill.aliases|join:", " }}</p>
-                    {% endif %}
+        <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-2xl rounded-2xl overflow-hidden">
+            <h2 class="text-xl font-bold text-white p-6 border-b border-white/5">Your Skills</h2>
+            <div class="divide-y divide-white/5">
+                {% for skill in skills %}
+                <div class="flex justify-between items-center p-6 hover:bg-white/1 transition duration-200">
+                    <div>
+                        <span class="text-white font-semibold text-sm">{{ skill.title }}</span>
+                        {% if skill.aliases %}
+                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                {% for alias in skill.aliases %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-800 text-gray-400 text-xs border border-white/5 font-medium">{{ alias }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex gap-2.5">
+                        <!-- Edit Button -->
+                        <button class="bg-emerald-600/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                onclick="openEditModal('{{ skill.id }}', '{{ skill.title|escapejs }}', '{{ skill.aliases|join:'| '|escapejs }}')">
+                            Edit
+                        </button>
+                        <!-- Delete Button -->
+                        <button class="bg-rose-600/10 text-rose-400 border border-rose-500/25 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                onclick="openDeleteModal('{{ skill.id }}', '{{ skill.title }}')">
+                            Delete
+                        </button>
+                    </div>
                 </div>
-                <div class="skill-actions">
-                    <!-- Edit Button -->
-                    <button class="edit-btn" onclick="openEditModal('{{ skill.id }}', '{{ skill.title|escapejs }}', '{{ skill.aliases|join:'| '|escapejs }}')">
-                        Edit
-                    </button>
-                    <!-- Delete Button -->
-                    <button class="delete-btn" onclick="openDeleteModal('{{ skill.id }}', '{{ skill.title }}')">
-                        Delete
-                    </button>
+                {% empty %}
+                <div class="p-8 text-gray-500 text-center italic">
+                    No skills added yet.
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div class="p-4 text-gray-400 text-center">
-                No skills added yet.
-            </div>
-            {% endfor %}
         </div>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
 <div id="deleteModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="text-lg font-medium text-gray-100">Confirm Deletion</h3>
-        <p class="text-gray-300 mt-2">Are you sure you want to delete "<span id="skillToDeleteName"></span>"?</p>
-        <div class="modal-actions">
-            <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 w-[90%] max-w-md shadow-2xl">
+        <h3 class="text-lg font-bold text-white">Confirm Deletion</h3>
+        <p class="text-gray-300 text-sm mt-3">Are you sure you want to delete "<span id="skillToDeleteName" class="text-white font-semibold"></span>"? This action cannot be undone.</p>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-800 text-gray-300 rounded-xl text-xs font-semibold hover:bg-slate-700 transition">
                 Cancel
             </button>
-            <form id="deleteForm" method="post" action={% url 'skill_delete' %} >
+            <form id="deleteForm" method="post" action="{% url 'skill_delete' %}">
                 {% csrf_token %}
                 <input type="hidden" name="skill_id" id="skillToDeleteId">
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition">
-                    Delete
+                <button type="submit" class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-500 transition">
+                    Delete Skill
                 </button>
             </form>
         </div>
@@ -168,29 +109,27 @@
 
 <!-- Edit Skill Modal -->
 <div id="editModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="text-lg font-medium text-gray-100">Edit Skill</h3>
-        <form id="editForm" method="post" action={% url 'skill_edit' %}  class="mt-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 w-[90%] max-w-md shadow-2xl">
+        <h3 class="text-lg font-bold text-white">Edit Skill</h3>
+        <form id="editForm" method="post" action="{% url 'skill_edit' %}" class="mt-4 space-y-4">
             {% csrf_token %}
             <input type="hidden" name="skill_id" id="editSkillId">
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1" for="editSkillName">Skill Name</label>
-                    <input type="text" name="title" id="editSkillName"
-                           class="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1" for="editSkillAliases">Aliases</label>
-                    <textarea name="aliases" id="editSkillAliases" rows="3"
-                              class="w-full bg-gray-700 border border-gray-600 text-gray-100 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="drf, django rest framework"></textarea>
-                </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-1.5" for="editSkillName">Skill Name</label>
+                <input type="text" name="title" id="editSkillName"
+                       class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm">
             </div>
-            <div class="modal-actions">
-                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition">
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-1.5" for="editSkillAliases">Aliases</label>
+                <textarea name="aliases" id="editSkillAliases" rows="3"
+                          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm"
+                          placeholder="drf, django rest framework"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-800 text-gray-300 rounded-xl text-xs font-semibold hover:bg-slate-700 transition">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition">
+                <button type="submit" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold transition">
                     Save Changes
                 </button>
             </div>

@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="content">
-  <div class="flex justify-between items-center mb-6">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
     <div>
-      <h1 class="text-3xl font-bold">Resumes</h1>
-      <p class="text-gray-400">Job: <span class="text-white">{{ job.title }}</span> (v{{ job.version }})</p>
+      <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Resumes</h1>
+      <p class="text-gray-400 text-sm mt-1">Job Opening: <span class="text-emerald-400 font-semibold">{{ job.title }}</span> (v{{ job.version }})</p>
     </div>
-    <a href="{% url 'job_details' job.id %}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
+    <a href="{% url 'job_details' job.id %}" class="bg-slate-800 hover:bg-slate-700 border border-white/5 text-gray-200 px-4 py-2.5 rounded-lg text-sm transition">
       Back to Job Detail
     </a>
   </div>
@@ -16,25 +16,45 @@
   {% if resumes %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for resume in resumes %}
-        <div class="bg-gray-800 rounded-lg p-4 shadow-md">
-          <h2 class="text-lg font-semibold text-white mb-2">{{ resume.name|default:"Unnamed" }}</h2>
-          <p class="text-sm text-gray-400 mb-1">Email: {{ resume.email|default:"—" }}</p>
-          <p class="text-sm text-gray-400 mb-1">Score: 
-            <span
-              {% if resume.score < 80 %} class="text-red-500"
-              {% elif resume.score <= 95 %} class="text-green-400"
-              {% else %} class="text-yellow-400"
-              {% endif %}>
-              {{ resume.score|default:"—" }} / 100
-            </span>
-          </p>
-          <p class="text-sm text-gray-400 mb-3">Verdict: {{ resume.verdict|capfirst|default:"—" }}</p>
-          <a href="{% url 'result' resume.id %}" class="text-blue-400 hover:underline text-sm">View Details</a>
+        <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-xl hover:-translate-y-1 hover:border-slate-700 transition-all duration-300 flex flex-col justify-between min-h-[200px]">
+          <div>
+            <h2 class="text-lg font-bold text-white mb-3">{{ resume.name|default:"Unnamed Candidate" }}</h2>
+            <div class="space-y-1.5 text-xs text-gray-400 mb-4">
+              <div><span class="text-gray-500">Email:</span> {{ resume.email|default:"—" }}</div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500">Score:</span> 
+                <span class="font-extrabold text-xs px-2 py-0.5 rounded
+                  {% if resume.score < 80 %} bg-rose-500/10 text-rose-400 border border-rose-500/20
+                  {% elif resume.score <= 95 %} bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                  {% else %} bg-amber-500/10 text-amber-400 border border-amber-500/20
+                  {% endif %}">
+                  {{ resume.score|default:"—" }} / 100
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500">Verdict:</span> 
+                <span class="font-semibold text-xs capitalize
+                  {% if resume.verdict == 'matched' %} text-emerald-400
+                  {% elif resume.verdict == 'skipped' %} text-rose-400
+                  {% else %} text-amber-400
+                  {% endif %}">
+                  {{ resume.verdict|default:"—" }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="border-t border-white/5 pt-3 flex justify-end">
+            <a href="{% url 'result' resume.id %}" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium px-4 py-2 rounded-lg text-xs transition">
+              View Profile
+            </a>
+          </div>
         </div>
       {% endfor %}
     </div>
   {% else %}
-    <p class="text-gray-400">No resumes found for this job.</p>
+    <div class="bg-slate-900/20 border border-white/5 rounded-2xl p-8 text-center">
+      <p class="text-gray-400">No resumes found for this job opening.</p>
+    </div>
   {% endif %}
 </div>
 {% endblock %}

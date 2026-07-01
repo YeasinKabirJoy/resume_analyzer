@@ -2,59 +2,67 @@
 {% block title %}Edit {{ job.title }}{% endblock %}
 
 {% block content %}
-<div class="content">
-  <div class="max-w-2xl bg-gray-800 rounded-lg p-6 shadow-md">
-    <h1 class="text-2xl font-bold text-white mb-6">Edit Job Role</h1>
+<div class="content flex justify-center py-8">
+  <div class="max-w-2xl w-full bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-8 shadow-2xl">
+    <h1 class="text-3xl font-extrabold text-white mb-6 border-b border-white/5 pb-4">Edit Job Role</h1>
 
-    <form method="POST" class="space-y-5">
+    <form method="POST" class="space-y-6">
       {% csrf_token %}
-        {{ form.non_field_errors }}
+      {{ form.non_field_errors }}
 
-        <div>
-        <label for="{{ form.title.id_for_label }}" class="block text-gray-300 text-sm mb-1 font-medium">
+      <!-- Title Input -->
+      <div>
+        <label for="{{ form.title.id_for_label }}" class="block text-gray-300 text-sm font-semibold mb-2">
             {{ form.title.label }}
         </label>
-        {{ form.title }}
+        <input type="text" name="title" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:"" }}"
+               class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm">
         {% if form.title.errors %}
-            <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+            <p class="text-red-400 text-xs mt-1.5 font-medium">{{ form.title.errors.0 }}</p>
         {% endif %}
-        </div>
+      </div>
 
-        <div>
-        <label for="{{ form.minimum_experience.id_for_label }}" class="block text-gray-300 text-sm mb-1 font-medium">
+      <!-- Min Experience Input -->
+      <div>
+        <label for="{{ form.minimum_experience.id_for_label }}" class="block text-gray-300 text-sm font-semibold mb-2">
             {{ form.minimum_experience.label }}
         </label>
-        {{ form.minimum_experience }}
+        <input type="number" name="minimum_experience" id="{{ form.minimum_experience.id_for_label }}" step="0.1" value="{{ form.minimum_experience.value|default:"0" }}"
+               class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm">
         {% if form.minimum_experience.errors %}
-            <p class="text-red-500 text-sm mt-1">{{ form.minimum_experience.errors.0 }}</p>
+            <p class="text-red-400 text-xs mt-1.5 font-medium">{{ form.minimum_experience.errors.0 }}</p>
         {% endif %}
-        </div>
+      </div>
 
-        <div>
-        <label for="{{ form.version.id_for_label }}" class="block text-gray-300 text-sm mb-1 font-medium">
+      <!-- Version Input -->
+      <div>
+        <label for="{{ form.version.id_for_label }}" class="block text-gray-300 text-sm font-semibold mb-2">
             {{ form.version.label }}
         </label>
-        {{ form.version }}
+        <input type="number" name="version" id="{{ form.version.id_for_label }}" value="{{ form.version.value|default:"1" }}"
+               class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition sm:text-sm">
         {% if form.version.errors %}
-            <p class="text-red-500 text-sm mt-1">{{ form.version.errors.0 }}</p>
+            <p class="text-red-400 text-xs mt-1.5 font-medium">{{ form.version.errors.0 }}</p>
         {% endif %}
-        </div>
+      </div>
 
-        <div class="flex items-center space-x-2">
-        {{ form.active }}
-        <label for="{{ form.active.id_for_label }}" class="text-gray-300 text-sm">
-            {{ form.active.label }}
+      <!-- Active Checkbox -->
+      <div class="flex items-center space-x-3 bg-white/2 border border-white/5 rounded-xl p-4">
+        <input type="checkbox" name="active" id="{{ form.active.id_for_label }}" {% if form.active.value %}checked{% endif %}
+               class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-700 rounded">
+        <label for="{{ form.active.id_for_label }}" class="text-gray-300 text-sm font-medium cursor-pointer">
+            Make job role active for resume uploads
         </label>
-        </div>
         {% if form.active.errors %}
-        <p class="text-red-500 text-sm mt-1">{{ form.active.errors.0 }}</p>
+          <p class="text-red-400 text-xs mt-1.5 font-medium">{{ form.active.errors.0 }}</p>
         {% endif %}
+      </div>
 
-      <div class="pt-4 flex gap-4">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">
+      <div class="pt-6 border-t border-white/5 flex items-center gap-4">
+        <button type="submit" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-500/10 transition active:scale-[0.98]">
           Save Changes
         </button>
-        <a href="{% url 'job_details' job.id %}" class="text-sm text-blue-400 hover:underline mt-2">Cancel</a>
+        <a href="{% url 'job_details' job.id %}" class="text-sm text-gray-400 hover:text-white transition">Cancel</a>
       </div>
     </form>
   </div>

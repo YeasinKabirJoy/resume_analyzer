@@ -1,44 +1,6 @@
 {% extends "base.html" %}
 
 {% block style %}
-    /* Select2 Dark Theme */
-    .select2-container--default .select2-selection--multiple {
-        background-color: #1f2937;
-        border: 1px solid #374151;
-        border-radius: 0.375rem;
-        min-height: 42px;
-        color: #e5e7eb;
-    }
-
-    .select2-container--default .select2-selection--multiple .select2-selection__choice {
-        background-color: #3b82f6;
-        border: 1px solid #2563eb;
-        color: white;
-    }
-
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-        color: white;
-        margin-right: 0.25rem;
-    }
-
-    .select2-container--default .select2-search--inline .select2-search__field {
-        color: #e5e7eb;
-    }
-
-    .select2-dropdown {
-        background-color: #1f2937;
-        border-color: #374151;
-    }
-
-    .select2-results__option {
-        color: #e5e7eb;
-        padding: 8px;
-    }
-
-    .select2-results__option--highlighted {
-        background-color: #3b82f6 !important;
-    }
-
     /* Form Styling */
     .form-input {
         background-color: #1f2937;
@@ -47,8 +9,8 @@
     }
 
     .form-input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 1px #3b82f6;
+        border-color: #10b981;
+        box-shadow: 0 0 0 1px #10b981;
     }
 
     .form-label {
@@ -80,7 +42,7 @@
 
 {% block content %}
 <div class="content flex items-center justify-center py-8">
-    <div class="bg-gray-800 shadow-lg rounded-lg p-8 w-full max-w-2xl">
+    <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-2xl rounded-2xl p-8 w-full max-w-2xl">
         <h1 class="text-2xl font-bold mb-6 text-gray-100">Create New Job Role</h1>
 
         <form method="post" id="jobRoleForm" class="space-y-6">
@@ -90,20 +52,20 @@
             <div>
                 <label for="id_title" class="block text-sm font-medium text-gray-300 mb-1">Job Title</label>
                 <input type="text" name="title" id="id_title" required
-                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500">
             </div>
 
             <!-- Minimum Experience -->
             <div>
                 <label for="id_minimum_experience" class="block text-sm font-medium text-gray-300 mb-1">Minimum Experience (years)</label>
                 <input type="number" name="minimum_experience" id="id_minimum_experience" min="0" step="0.1" value="0" required
-                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500">
             </div>
 
             <!-- Active Status -->
             <div class="flex items-center">
                 <input type="checkbox" name="active" id="id_active" checked
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded">
+                       class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-600 rounded">
                 <label for="id_active" class="ml-2 block text-sm text-gray-300">Active</label>
             </div>
 
@@ -136,7 +98,7 @@
             <!-- Submit Button -->
             <div class="pt-4">
                 <button type="submit" id="submitBtn"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
+                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2 px-4 rounded-md transition">
                     Create Job Role
                 </button>
             </div>

@@ -3,21 +3,27 @@
 
 {% block content %}
 <div class="content">
-  <div class="max-w-3xl bg-gray-800 rounded-lg p-6 shadow-md">
-    <h1 class="text-3xl font-bold mb-4">Job Overview</h1>
-
-    <div class="mb-4">
-      <p class="text-xl text-white font-semibold">{{ job.title }}</p>
-      <p class="text-gray-400">Version: <span class="text-white">{{ job.version }}</span></p>
-      <p class="text-gray-400">Active: <span class="text-white">{{ job.active|yesno:"Yes,No" }}</span></p>
-      <p class="text-gray-400">Created on: <span class="text-white">{{ job.created_at|date:"F j, Y" }}</span></p>
+  <div class="max-w-3xl bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-8 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+      <h1 class="text-3xl font-extrabold text-white">Job Overview</h1>
+      {% if job.active %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">Active</span>
+      {% else %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-white/10">Inactive</span>
+      {% endif %}
     </div>
 
-    <div class="flex flex-wrap gap-4 mt-6">
-      <a href="{% url 'resumes' job.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm shadow transition">
+    <div class="space-y-4 text-sm">
+      <div class="flex border-b border-white/2 pb-3"><span class="text-gray-400 w-32">Job Role:</span> <span class="text-white font-bold text-lg">{{ job.title }}</span></div>
+      <div class="flex border-b border-white/2 pb-3"><span class="text-gray-400 w-32">Version:</span> <span class="text-gray-200 font-semibold">{{ job.version }}</span></div>
+      <div class="flex border-b border-white/2 pb-3"><span class="text-gray-400 w-32">Created on:</span> <span class="text-gray-200 font-semibold">{{ job.created_at|date:"F j, Y" }}</span></div>
+    </div>
+
+    <div class="flex flex-wrap gap-4 mt-8 pt-4 border-t border-white/5">
+      <a href="{% url 'resumes' job.id %}" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-500/10 transition active:scale-[0.98]">
         View Resumes ({{ job.resume_set.count }})
       </a>
-      <a href="{% url 'job_edit' job.id %}" class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded text-sm shadow transition">
+      <a href="{% url 'job_edit' job.id %}" class="bg-slate-800 hover:bg-slate-700 border border-white/5 text-gray-200 px-5 py-2.5 rounded-xl text-sm transition">
         Edit Job
       </a>
     </div>

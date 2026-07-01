@@ -12,69 +12,200 @@
         };
     </script>
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- jQuery and Select2 -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
+        :root {
+            --font-heading: 'Plus Jakarta Sans', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --glass-bg: rgba(5, 12, 10, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(180deg, #0d0e11 0%, #08090b 100%);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+            letter-spacing: -0.025em;
+        }
         
         /* Sidebar styling */
         .sidebar {
-            width: 250px;
+            width: 260px;
             height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            background-color: #1f2937; /* gray-800 */
-            color: #e5e7eb; /* gray-200 */
-            padding: 1.5rem;
+            background: rgba(4, 10, 8, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 1.25rem;
             display: flex;
             flex-direction: column;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 50;
         }
 
         .sidebar a {
             display: flex;
             align-items: center;
-            padding: 0.75rem;
-            margin: 0.5rem 0;
-            color: #e5e7eb; /* gray-200 */
+            padding: 0.75rem 1rem;
+            margin: 0.375rem 0;
+            color: #9ca3af; /* gray-400 */
             text-decoration: none;
-            border-radius: 0.375rem;
-            transition: background-color 0.2s;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            font-size: 0.925rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
         }
 
         .sidebar a:hover {
-            background-color: #374151; /* gray-700 */
+            color: #f3f4f6; /* gray-100 */
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.03);
+            transform: translateX(4px);
         }
 
         .sidebar a.active {
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(13, 148, 136, 0.15) 100%);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.25);
+            box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.15);
         }
 
         .sidebar svg {
-            margin-right: 0.75rem;
-            width: 1.5rem;
-            height: 1.5rem;
+            margin-right: 0.875rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            transition: transform 0.3s;
+        }
+
+        .sidebar a:hover svg {
+            transform: scale(1.1);
         }
 
         .content {
-            margin-left: 250px;
-            padding: 2rem;
-            width: calc(100% - 250px);
+            margin-left: 260px;
+            padding: 2.5rem;
+            width: calc(100% - 260px);
+            min-height: 100vh;
         }
 
         @media (max-width: 768px) {
             .sidebar {
-                width: 200px;
+                width: 80px;
+                padding: 2rem 0.5rem;
+                align-items: center;
+            }
+            .sidebar h2 {
+                display: none;
+            }
+            .sidebar a span {
+                display: none;
+            }
+            .sidebar a {
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                padding: 0;
+            }
+            .sidebar svg {
+                margin-right: 0;
             }
             .content {
-                margin-left: 200px;
-                width: calc(100% - 200px);
+                margin-left: 80px;
+                width: calc(100% - 80px);
+                padding: 1.5rem;
             }
+        }
 
+        /* Unified Dark Mode Select2 Styles */
+        .select2-container--default .select2-selection--single {
+            height: 42px;
+            padding: 6px 12px;
+            border: 1px solid #162e24 !important;
+            border-radius: 0.375rem;
+            background-color: #050c0a !important;
+            color: #e5e7eb !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px;
+            color: #e5e7eb !important;
+        }
+
+        .select2-search__field {
+            color: #ffffff !important;
+            background-color: #0c1a14 !important;
+            border: 1px solid #162e24 !important;
+            border-radius: 0.25rem;
+            padding: 4px 8px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+            right: 8px;
+        }
+
+        .select2-dropdown {
+            background-color: #050c0a !important;
+            color: #e5e7eb !important;
+            border-color: #162e24 !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        .select2-results__option {
+            padding: 8px 12px;
+            color: #d1d5db !important;
+        }
+
+        .select2-results__option--highlighted {
+            background-color: #059669 !important;
+            color: white !important;
+        }
+
+        .select2-results__option--selected {
+            background-color: #022c22 !important;
+            color: #34d399 !important;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            background-color: #050c0a !important;
+            border: 1px solid #162e24 !important;
+            border-radius: 0.375rem;
+            min-height: 42px;
+            color: #e5e7eb !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #047857 !important;
+            border: 1px solid #065f46 !important;
+            color: white !important;
+            border-radius: 0.25rem;
+            padding: 2px 8px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white !important;
+            margin-right: 0.375rem !important;
+        }
+
+        .select2-container--default .select2-search--inline .select2-search__field {
+            color: #e5e7eb !important;
         }
 
         {% block style %}
@@ -85,33 +216,60 @@
 
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
-         <a href="/">
-             <h2 class="text-xl font-bold mb-2 text-gray-100">Resume Analyzer</h2>
-        </a>
-        <a href="/upload" class="{% block nav-upload %}{% endblock %}">
+         <a href="/" class="flex items-center gap-2 mb-6 px-1 hover:transform-none">
+             <svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 512 512" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+                  <g transform="translate(1 1)">
+                    <g>
+                      <polygon style="fill:#162e24;" points="169.667,7.533 212.333,50.2 323.267,50.2 408.6,135.533 408.6,7.533 "></polygon>
+                      <polygon style="fill:#162e24;" points="451.267,178.2 323.267,50.2 127,50.2 127,476.867 451.267,476.867 "></polygon>
+                    </g>
+                    <polygon style="fill:#0f241a;" points="144.067,7.533 186.733,50.2 297.667,50.2 383,135.533 383,7.533 "></polygon>
+                    <polygon style="fill:#162e24;" points="101.4,50.2 297.667,50.2 357.4,135.533 357.4,7.533 84.333,7.533 84.333,434.2 101.4,434.2 "></polygon>
+                    <polygon style="fill:#ffffff; opacity:0.85;" points="58.733,434.2 84.333,434.2 84.333,7.533 58.733,7.533 "></polygon>
+                    <polygon style="fill:#0f241a;" points="425.667,178.2 297.667,50.2 101.4,50.2 101.4,476.867 425.667,476.867 "></polygon>
+                    <polygon style="fill:#162e24;" points="400.067,178.2 289.133,50.2 101.4,50.2 101.4,476.867 400.067,476.867 "></polygon>
+                    <path style="fill:#10b981; opacity:0.15;" d="M368.493,324.973c0,51.2-40.96,92.16-92.16,92.16s-92.16-40.96-92.16-92.16s40.96-92.16,92.16-92.16 S368.493,273.773,368.493,324.973"></path>
+                    <g>
+                      <path style="fill:#34d399; opacity:0.25;" d="M340.333,324.973c0,51.2-35.84,92.16-79.36,92.16s-79.36-40.96-79.36-92.16 s35.84-92.16,79.36-92.16S340.333,273.773,340.333,324.973"></path>
+                      <path style="fill:#ffffff; opacity:0.9;" d="M423.107,178.2h-125.44V52.76c0-0.853,0.853-1.707,1.707-0.853L423.96,176.493 C424.813,177.347,423.96,178.2,423.107,178.2"></path>
+                    </g>
+                    <g>
+                      <path style="fill:#34d399;" d="M423.107,186.733h-125.44c-5.12,0-8.533-3.413-8.533-8.533V52.76c0-4.267,2.56-7.68,5.973-8.533 c3.413-1.707,7.68-0.853,10.24,1.707L429.933,170.52c2.56,2.56,3.413,6.827,1.707,10.24 C430.787,184.173,427.373,186.733,423.107,186.733z M417.987,182.467L417.987,182.467L417.987,182.467z M306.2,169.667h98.987 L306.2,70.68V169.667z"></path>
+                      <path style="fill:#a1a1aa;" d="M425.667,485.4H101.4c-5.12,0-8.533-3.413-8.533-8.533V50.2c0-5.12,3.413-8.533,8.533-8.533 h196.267c2.56,0,4.267,0.853,5.973,2.56l128,128c1.707,1.707,2.56,3.413,2.56,5.973v298.667 C434.2,481.987,430.787,485.4,425.667,485.4z M109.933,468.333h307.2v-286.72l-122.88-122.88h-184.32V468.333z"></path>
+                      <path style="fill:#10b981;" d="M276.333,425.667c-55.467,0-100.693-45.227-100.693-100.693S220.867,224.28,276.333,224.28 s100.693,45.227,100.693,100.693S331.8,425.667,276.333,425.667z M276.333,240.493c-46.08,0-83.627,37.547-83.627,83.627 s36.693,84.48,83.627,84.48s83.627-37.547,83.627-83.627S322.413,240.493,276.333,240.493z"></path>
+                      <path style="fill:#10b981;" d="M451.267,511c-2.56,0-4.267-0.853-5.973-2.56L336.067,400.067c-3.413-3.413-3.413-8.533,0-11.947 c3.413-3.413,8.533-3.413,11.947,0L457.24,497.347c3.413,3.413,3.413,8.533,0,11.947C455.533,510.147,453.827,511,451.267,511z"></path>
+                      <path style="fill:#34d399;" d="M277.187,306.2h-51.2c-5.12,0-8.533-3.413-8.533-8.533s3.413-8.533,8.533-8.533h51.2 c5.12,0,8.533,3.413,8.533,8.533S282.307,306.2,277.187,306.2z"></path>
+                      <path style="fill:#34d399;" d="M328.387,357.4h-102.4c-5.12,0-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533h102.4 c5.12,0,8.533,3.413,8.533,8.533C336.92,353.987,333.507,357.4,328.387,357.4z"></path>
+                      <path style="fill:#71717a;" d="M101.4,442.733H58.733c-5.12,0-8.533-3.413-8.533-8.533V7.533C50.2,2.413,53.613-1,58.733-1H383 c5.12,0,8.533,3.413,8.533,8.533v128c0,3.413-1.707,6.827-5.12,7.68c-3.413,1.707-6.827,0.853-9.387-1.707l-82.773-82.773h-184.32 V434.2C109.933,439.32,106.52,442.733,101.4,442.733z M67.267,425.667h25.6V50.2c0-5.12,3.413-8.533,8.533-8.533h196.267 c2.56,0,4.267,0.853,5.973,2.56l70.827,70.827V16.067h-307.2V425.667z"></path>
+                    </g>
+                  </g>
+             </svg>
+             <h2 class="text-xl font-extrabold text-white tracking-tight leading-none">Resume Analyzer</h2>
+         </a>
+         <a href="/upload" class="{% block nav-upload %}{% endblock %}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Analyze
-        </a>
-        <a href="/jobs" class="{% block nav-jobs %}{% endblock %}">
+            <span>Analyze</span>
+         </a>
+         <a href="/jobs" class="{% block nav-jobs %}{% endblock %}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            Active Jobs
-        </a>
-        <a href="/skills" class="{% block nav-profile %}{% endblock %}">
+            <span>Active Jobs</span>
+         </a>
+         <a href="/skills" class="{% block nav-profile %}{% endblock %}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            Skills
-        </a>
-        <a href="/logout" class="{% block nav-logout %}{% endblock %}">
+            <span>Skills</span>
+         </a>
+         <!-- <a href="/logout" class="{% block nav-logout %}{% endblock %}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h3a3 3 0 013 3v1" />
             </svg>
-            Logout
-        </a>
+            <span>Logout</span>
+         </a> -->
     </nav>
 
     <!-- Main Content -->

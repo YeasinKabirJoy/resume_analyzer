@@ -1,65 +1,72 @@
 {% extends 'base.html' %}
-{% block title %}Active Jobs{% endblock %}
+{% block title %}{{ title }} Job Roles{% endblock %}
 
 {% block style %}
 input[type="text"],
 input[type="number"],
 input[type="email"] {
-background-color: #1f2937; /* Tailwind's gray-800 */
-color:rgb(0, 0, 0); /* Tailwind's gray-100 */
-  }
-  
+    background-color: #1f2937;
+    color: #f3f4f6;
+    border: 1px solid #374151;
+}
 {% endblock style %}
 
 {% block content %}
 <div class="content">
    
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-bold">{{ title }} Job Roles</h1>
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+  <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{{ title }} Job Roles</h1>
 
-  <div class="flex gap-2">
+  <div class="flex flex-wrap gap-3">
+    <a href="/jobs/create/" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition shadow-lg shadow-emerald-500/10">
+      Create Job
+    </a>
 
-     <a href="/jobs/create/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
-        Create Jobs
-      </a>
-
-    {% if title ==  'Active' %}
-      <a href="/jobs/?all=yes" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+    {% if title == 'Active' %}
+      <a href="/jobs/?all=yes" class="bg-slate-800 hover:bg-slate-700 border border-white/5 text-gray-200 px-5 py-2.5 rounded-lg text-sm transition">
         View All Jobs
       </a>
     {% else %}
-      <a href="/jobs" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition">
+      <a href="/jobs" class="bg-slate-800 hover:bg-slate-700 border border-white/5 text-gray-200 px-5 py-2.5 rounded-lg text-sm transition">
         View Active Jobs
       </a>
     {% endif %}
-
   </div>
 </div>
-
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
     {% for job in active_jobs %}
       {% if job.title %}
-        <div class="flex flex-col justify-between bg-gray-800 rounded-lg p-6 shadow-md min-h-[170px]">
+        <div class="flex flex-col justify-between bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-xl p-6 shadow-xl hover:-translate-y-1 hover:border-slate-700 transition-all duration-300 min-h-[180px]">
           <div>
-            <h2 class="text-xl font-semibold text-white mb-2">{{ job.title }}</h2>
-            <p class="text-gray-400">Total Resumes: 
-              <span class="font-bold text-blue-400">{{ job.resume_count }}</span>
+            <div class="flex justify-between items-start gap-2 mb-3">
+              <h2 class="text-xl font-bold text-white leading-tight">{{ job.title }}</h2>
+              {% if job.active %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">Active</span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-white/10">Inactive</span>
+              {% endif %}
+            </div>
+            <p class="text-gray-400 text-sm flex items-center">
+              Resumes processed: 
+              <span class="font-extrabold text-emerald-400 ml-2 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 text-xs">{{ job.resume_count }}</span>
             </p>
           </div>
-          <div class="mt-4 flex justify-between items-center">
-            <a href="{% url 'job_details' job.id %}" class="text-blue-400 hover:underline text-sm">
-              View Job Detail
+          <div class="mt-6 flex justify-between items-center border-t border-white/5 pt-4">
+            <a href="{% url 'job_details' job.id %}" class="text-emerald-400 hover:text-emerald-300 font-medium text-sm transition flex items-center">
+              View details &rarr;
             </a>
-            <a href="{% url 'resumes' job.id %}" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
-              View All Resumes
+            <a href="{% url 'resumes' job.id %}" class="bg-slate-800 hover:bg-slate-700 border border-white/5 text-gray-200 px-3.5 py-1.5 rounded-md text-xs font-medium transition">
+              View Resumes
             </a>
           </div>
         </div>
       {% endif %}
     {% empty %}
-      <p class="text-gray-400">No active job roles found.</p>
+      <div class="col-span-full bg-slate-900/20 border border-white/5 rounded-xl p-8 text-center">
+        <p class="text-gray-400">No job roles found. Create one to get started!</p>
+      </div>
     {% endfor %}
 
   </div>
