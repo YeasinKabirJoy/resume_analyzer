@@ -1,3 +1,5 @@
+import json
+
 from services.ner_extractor import extract_educations, extract_experiences
 from services.rule_extractors import extract_contacts, extract_name, extract_sections
 from services.scorer import score_resume
@@ -8,7 +10,9 @@ from utils.pdf_parser import extract_text_from_pdf
 
 def process_resume(resume_record):
     text = extract_text_from_pdf(resume_record.resume.path)
-    return analyze_text(text, resume_record.job_role)
+    analyzed = analyze_text(text, resume_record.job_role)
+    print_resume_result(analyzed, resume_record.resume.path)
+    return analyzed
 
 
 def analyze_text(resume_text, job_role):
@@ -88,3 +92,27 @@ def _attach_durations(experiences, experience_breakdown):
             item["duration"] = experience_breakdown[index]
         combined.append(item)
     return combined
+
+
+def print_resume_result(result, source_path=None):
+    payload = {
+        "source": source_path,
+        "name": result.get("name", ""),
+        "email": result.get("email", ""),
+        "phone": result.get("phone", ""),
+        "github": result.get("github", ""),
+        "linkedin": result.get("linkedin", ""),
+        "total_experience": result.get("total_experience", 0),
+        "score": result.get("score", 0),
+        "verdict": result.get("verdict", ""),
+        "confidence_score": result.get("confidence_score", 0),
+        "text_quality_score": result.get("text_quality_score", 0),
+        "matched_mandatory_skills": result.get("matched_mandatory_skills", []),
+        "missed_mandatory_skills": result.get("missed_mandatory_skills", []),
+        "matched_optional_skills": result.get("matched_optional_skills", []),
+        "missed_optional_skills": result.get("missed_optional_skills", []),
+        "experiences": result.get("experiences", []),
+        "educations": result.get("educations", []),
+    }
+    print("RESUME ANALYSIS RESULT:")
+    print(json.dumps(payload, indent=2, ensure_ascii=False, default=str))

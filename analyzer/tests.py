@@ -160,6 +160,22 @@ class ExtractorTests(SimpleTestCase):
         self.assertEqual(experiences[0]["start"], "Jan 2022")
         self.assertEqual(experiences[0]["end"], "Present")
 
+    def test_extract_experiences_splits_mixed_title_and_company(self):
+        text = """
+        EXPERIENCE
+        Python Developer - Nimbus Labs
+        Jan 2021 - Present
+        Built REST APIs and Django services.
+        """
+
+        experiences = extract_experiences(text)
+
+        self.assertEqual(len(experiences), 1)
+        self.assertEqual(experiences[0]["designation"], "Python Developer")
+        self.assertEqual(experiences[0]["company"], "Nimbus Labs")
+        self.assertEqual(experiences[0]["start"], "Jan 2021")
+        self.assertEqual(experiences[0]["end"], "Present")
+
     def test_extract_educations(self):
         educations = extract_educations(ATS_RESUME_TEXT)
 
@@ -246,6 +262,26 @@ class ExtractorTests(SimpleTestCase):
         self.assertTrue(educations)
         for education in educations:
             self.assertNotIn("GPA", education["degree"])
+
+    def test_extract_educations_handles_degree_institution_result_year_line(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science and Engineering - BRAC University (CGPA 3.82 / 4.00) - 2024
+        HSC - Dhaka City College (GPA 5.00 / 5.00) - 2020
+        SSC - Viqarunnisa Noon School and College (GPA 5.00 / 5.00) - 2018
+        """
+
+        educations = extract_educations(text)
+
+        self.assertGreaterEqual(len(educations), 3)
+        self.assertEqual(educations[0]["degree"], "BSc in Computer Science and Engineering")
+        self.assertEqual(educations[0]["institution"], "BRAC University")
+        self.assertIn("CGPA", educations[0]["result"])
+        self.assertEqual(educations[0]["year"], "2024")
+        self.assertEqual(educations[1]["institution"], "Dhaka City College")
+        self.assertEqual(educations[1]["year"], "2020")
+        self.assertEqual(educations[2]["institution"], "Viqarunnisa Noon School and College")
+        self.assertEqual(educations[2]["year"], "2018")
 
     def test_extract_experiences_supports_template_dates(self):
         template_text = """

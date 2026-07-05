@@ -171,8 +171,7 @@ def _extract_ner_first_education_records(section_text: str) -> list[dict]:
         if not institution:
             institution = next((candidate for candidate in window if candidate != line and (_looks_like_institution(candidate) or infer_line_entities(candidate)["company"]) and not _looks_like_result(candidate)), "")
 
-        year_match = next((re.search(r"\b(19|20)\d{2}\b", candidate) for candidate in window if re.search(r"\b(19|20)\d{2}\b", candidate)), None)
-        year = year_match.group(0) if year_match else ""
+        year = _extract_year_token(line) or next((year for candidate in window if candidate != line for year in [_extract_year_token(candidate)] if year), "")
 
         record = {
             "degree": _clean_education_component(degree),
@@ -181,7 +180,12 @@ def _extract_ner_first_education_records(section_text: str) -> list[dict]:
             "year": year,
         }
 
-        if record["degree"] or record["institution"] or record["result"] or record["year"]:
+        if record["degree"] and record["institution"]:
+            if records and _can_merge_education_records(records[-1], record):
+                records[-1] = _merge_education_records(records[-1], record)
+            elif record not in records:
+                records.append(record)
+        elif record["degree"] or record["institution"] or record["result"] or record["year"]:
             if records and _can_merge_education_records(records[-1], record):
                 records[-1] = _merge_education_records(records[-1], record)
             elif record not in records:
@@ -195,11 +199,14 @@ def _build_experience_record(before: list[str], after: list[str], date_info: dic
     company = _pick_experience_company(before, after, designation)
     location = _pick_location(before, after)
 
-    mixed_designation, mixed_company = _split_mixed_experience_line(designation)
-    if not designation and mixed_designation:
-        designation = mixed_designation
-    if not company and mixed_company:
-        company = mixed_company
+    designation, company = _resolve_experience_components(designation, company)
+    if not designation or not company:
+        anchor_designation, anchor_company = _split_mixed_experience_line(anchor_line)
+        if anchor_designation and anchor_company:
+            if not designation:
+                designation = anchor_designation
+            if not company:
+                company = anchor_company
 
     designation = _clean_experience_component(designation)
     company = _clean_experience_component(company)
@@ -212,6 +219,25 @@ def _build_experience_record(before: list[str], after: list[str], date_info: dic
         "start": date_info["start"] if date_info else normalize_date_token(anchor_line.split("-")[0].strip()),
         "end": date_info["end"] if date_info else "",
     }
+
+
+def _resolve_experience_components(designation: str, company: str) -> tuple[str, str]:
+    designation = normalize_whitespace(designation)
+    company = normalize_whitespace(company)
+
+    split_designation, split_company = _split_mixed_experience_line(designation)
+    if split_designation and split_company:
+        if not company or company == designation or _looks_like_title(company) or _looks_like_description(company):
+            return split_designation, split_company
+        designation = split_designation
+
+    split_designation, split_company = _split_mixed_experience_line(company)
+    if split_designation and split_company:
+        if not designation or designation == company or _looks_like_company(designation) or _looks_like_description(designation):
+            return split_designation, split_company
+        company = split_company
+
+    return designation, company
 
 
 def _build_education_record(before: list[str], after: list[str], date_info: dict | None, anchor_line: str) -> dict:
@@ -381,14 +407,16 @@ def _split_mixed_education_line(text: str) -> tuple[str, str]:
     if len(parts) != 2:
         return "", ""
     left, right = (_strip_bullets(part) for part in parts)
-    if _looks_like_institution(left) and _has_degree_keyword(right):
-        return right, left
-    if _looks_like_institution(right) and _has_degree_keyword(left):
-        return left, right
-    if _has_degree_keyword(left) and not _looks_like_institution(left) and right and _looks_like_institution(right):
-        return left, right
-    if _has_degree_keyword(right) and not _looks_like_institution(right) and left and _looks_like_institution(left):
-        return right, left
+    left_clean = _clean_education_component(left)
+    right_clean = _clean_education_component(right)
+    if _looks_like_institution(left_clean) and _has_degree_keyword(right_clean):
+        return right_clean, left_clean
+    if _looks_like_institution(right_clean) and _has_degree_keyword(left_clean):
+        return left_clean, right_clean
+    if _has_degree_keyword(left_clean) and not _looks_like_institution(left_clean) and right_clean and _looks_like_institution(right_clean):
+        return left_clean, right_clean
+    if _has_degree_keyword(right_clean) and not _looks_like_institution(right_clean) and left_clean and _looks_like_institution(left_clean):
+        return right_clean, left_clean
     return "", ""
 
 
@@ -451,8 +479,7 @@ def rule_extract_educations(text: str) -> list[dict]:
             degree = next((candidate for candidate in window if candidate != line and _looks_like_degree(candidate) and not _looks_like_result(candidate)), "")
         if not institution:
             institution = next((candidate for candidate in window if candidate != line and _looks_like_institution(candidate) and not _looks_like_result(candidate)), "")
-        year_match = next((re.search(r"\b(19|20)\d{2}\b", candidate) for candidate in window if re.search(r"\b(19|20)\d{2}\b", candidate)), None)
-        year = year_match.group(0) if year_match else ""
+        year = _extract_year_token(line) or next((year for candidate in window if candidate != line for year in [_extract_year_token(candidate)] if year), "")
 
         degree = _clean_education_component(degree)
         institution = _clean_education_component(institution)
@@ -487,6 +514,11 @@ def _extract_result_phrase(text: str) -> str:
         if match:
             return normalize_whitespace(match.group(0))
     return ""
+
+
+def _extract_year_token(text: str) -> str:
+    match = re.search(r"\b(19|20)\d{2}\b", text or "")
+    return match.group(0) if match else ""
 
 
 def _split_result_institution_line(text: str) -> tuple[str, str]:

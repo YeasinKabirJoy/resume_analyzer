@@ -181,6 +181,13 @@ def extract_experiences(text: str) -> list[dict]:
         for candidate in reversed(lines[max(0, index - 3) : index]):
             if not candidate or _looks_like_location(candidate) or parse_date_range(candidate):
                 continue
+            split_designation, split_company = _split_mixed_experience_line(candidate)
+            if split_designation and split_company:
+                if not designation:
+                    designation = split_designation
+                if not company:
+                    company = split_company
+                continue
             candidate_type = _classify_experience_line(candidate)
             if candidate_type == "company" and not company:
                 company = candidate
@@ -294,3 +301,23 @@ def _classify_experience_line(line: str) -> str:
     if any(keyword in lowered for keyword in company_keywords):
         return "company"
     return "unknown"
+
+
+def _split_mixed_experience_line(text: str) -> tuple[str, str]:
+    cleaned = normalize_whitespace(text)
+    if not cleaned:
+        return "", ""
+    parts = re.split(r"\s*(?:\bat\b|@|[–—-]|\|)\s*", cleaned, maxsplit=1, flags=re.IGNORECASE)
+    if len(parts) != 2:
+        return "", ""
+    left = normalize_whitespace(parts[0])
+    right = normalize_whitespace(parts[1])
+    if not left or not right:
+        return "", ""
+    left_is_designation = any(keyword in normalize_for_match(left) for keyword in ["engineer", "developer", "analyst", "manager", "intern", "lead", "architect", "consultant", "specialist"])
+    right_is_designation = any(keyword in normalize_for_match(right) for keyword in ["engineer", "developer", "analyst", "manager", "intern", "lead", "architect", "consultant", "specialist"])
+    if left_is_designation and not right_is_designation:
+        return left, right
+    if right_is_designation and not left_is_designation:
+        return right, left
+    return "", ""
