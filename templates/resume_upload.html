@@ -87,6 +87,10 @@
             const fileSelected = document.getElementById('file-selected');
             const fileNameText = document.getElementById('file-name-text');
 
+            dropContainer.addEventListener('click', function() {
+                fileInput.click();
+            });
+
             fileInput.addEventListener('change', function() {
                 if (fileInput.files.length > 0) {
                     fileNameText.textContent = fileInput.files[0].name;
@@ -95,19 +99,37 @@
                 }
             });
 
-            // Dragover and dragleave styles
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropContainer.addEventListener(eventName, (e) => {
-                    e.preventDefault();
-                    dropContainer.classList.add('dragover');
-                }, false);
+            dropContainer.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (!files || !files.length) {
+                    return;
+                }
+
+                const pdfFile = Array.from(files).find((file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
+                if (!pdfFile) {
+                    return;
+                }
+
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(pdfFile);
+                fileInput.files = dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
             });
 
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropContainer.addEventListener(eventName, (e) => {
-                    e.preventDefault();
-                    dropContainer.classList.remove('dragover');
-                }, false);
+            dropContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropContainer.classList.add('dragover');
+            });
+
+            dropContainer.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropContainer.classList.remove('dragover');
+            });
+
+            dropContainer.addEventListener('dragenter', function(e) {
+                e.preventDefault();
+                dropContainer.classList.add('dragover');
             });
         });
     </script>

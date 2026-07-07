@@ -1,104 +1,137 @@
-﻿# ðŸ“„ Resume Analyzer
+# Resume Analyzer
 
-**Resume Analyzer** is a web application built with **Python** and **Django** that allows users to upload resumes and evaluate them against specific job roles. The analysis uses an ATS-first rules-based pipeline to extract structured resume data and match it against job requirements.
+**Resume Analyzer** is a Django web application that evaluates ATS-style resumes against job roles using a hybrid local extraction pipeline. It combines lightweight NER with deterministic rules to parse structured resume data, then matches that data against role requirements.
 
 ---
 
-## ðŸš€ Features
+## Features
 
-- ðŸ“¤ Upload a **PDF Resume** and select a **Job Role**.
-- ðŸ¤– Analyze resumes using an **LLM** to extract:
-  - Personal information
-  - Skills (matched/missed)
-  - Experience history and total experience
-- ðŸŽ¯ Compare extracted resume data with job role requirements:
+- Upload a PDF resume and select a job role
+- Extract structured data locally from ATS-style resumes
+  - Personal details
+  - Experience history
+  - Education history
+  - Skills
+- Use a hybrid extraction pipeline
+  - NER-first for experience and education
+  - Deterministic rules as fallback
+  - Rules-based contact and skill matching
+- Compare extracted resume data with role requirements
   - Minimum experience
-  - **Mandatory** and **Optional** skills
-- ðŸ“ˆ Generate a **Resume Score** and **Verdict**:
-  - `Matched`
-  - `Skipped`
-  - `Overqualified`
-- ðŸ“ Display original uploaded PDF alongside analysis
-- ðŸ”„ **Versioned Job Roles**: If a role with the same title is created again, it's saved as `v2`, `v3`, etc.
-- ðŸ“š Manage:
-  - Job Roles (title, required experience, mandatory & optional skills)
-  - Skills (by title)
-  - Submitted resumes per job role, viewable individually
+  - Mandatory skills
+  - Optional skills
+- Generate a score and verdict
+  - `matched`
+  - `skipped`
+  - `overqualified`
+- Show resume analysis details and a PDF preview in the UI
+- Support versioned job roles
+- Manage job roles, skills, and uploaded resumes from the dashboard and admin
 
 ---
 
-## ðŸ–¼ï¸ Screenshots
+## Screenshots
 
-<!-- âœ… Add screenshots or diagrams here -->
-### ðŸ“¤ Dashboard
-<img src="preview/dashboard.png" alt="Dashboard" width="700"/>
+### Dashboard
+<img src="preview/dashboard-v2.png" alt="Dashboard" width="700"/>
 
-### ðŸ“¤ Resume Upload (Click Analyze)
-<img src="preview/analyze_upload.png" alt="Resume Upload" width="700"/>
+### Resume Upload
+<img src="preview/upload-v2.png" alt="Resume Upload" width="700"/>
 
-### ðŸ“¤ Active Jobs 
-<img src="preview/active_job.png" alt="Active Jobs" width="700"/>
+### Active Jobs
+<img src="preview/active_job-v2.png" alt="Active Jobs" width="700"/>
 
-### ðŸ“¤ Resumes (Click View All Resumes)
-<img src="preview/all_resume.png" alt="All Resumes" width="700"/>
+### Resumes
+<img src="preview/all_resume-v2.png" alt="All Resumes" width="700"/>
 
-### ðŸ“¤ Resume Details (Click View Details)
-<img src="preview/resume_details.png" alt="Resume Details" width="700"/>
+### Resume Details
+<img src="preview/resume_details-v2.png" alt="Resume Details" width="700"/>
 
-### ðŸ“¤ Job Role Create (Active Jobs -> Create Jobs)
-<img src="preview/job_role_create.png" alt="Job Role Create" width="700"/>
+### Job Role Create
+<img src="preview/job_create-v2.png" alt="Job Role Create" width="700"/>
 
-### ðŸ“¤ Skills Add/Edit
-<img src="preview/skills_crud.png" alt="Skills Crud" width="700"/>
+### Skills Add/Edit
+<img src="preview/skill_crud-v2.png" alt="Skills Crud" width="700"/>
+
 ---
 
-## ðŸ› ï¸ Tech Stack
+## Tech Stack
 
-- **Backend**: Python, Django
-- **AI/ML**: ATS-style rules-based extraction and matching
-- **Frontend**: Django Templates 
-- **Database**: SQLite
+- Backend: Python, Django
+- Extraction: Lightweight local NER + deterministic rules
+- Matching: Local rules-based scoring and role comparison
+- Frontend: Django Templates
+- Database: SQLite
+
 ---
 
-## ðŸ§ª Setup Instructions
+## Setup Instructions
 
 Follow these steps to set up the project locally.
 
 ### Clone the Repository
 
-If your project is already in an existing python3 virtualenv first install django by running
+```bash
+git clone https://github.com/YeasinKabirJoy/resume_analyzer.git
+cd resume_analyzer
+```
 
-    $ git clone https://github.com/YeasinKabirJoy/resume_analyzer.git \
-    cd resume_analyzer
-    
-      
 ### Create a Virtual Environment
 
-    $ python -m virtualenv venv
-    
-### Activate the Virtual Environment
-#### On Windows
-    $ venv\Scripts\activate
-#### on Mac/Linux
-    $ source venv/bin/activate
-    
-### Install Dependencies
-    $ pip install -r requirements.txt
+```bash
+python -m virtualenv venv
+```
 
-### Running the Project
+### Activate the Virtual Environment
+
+#### Windows
+```bash
+venv\Scripts\activate
+```
+
+#### Mac/Linux
+```bash
+source venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run the Project
 
 #### Apply database migrations
-    $ python manage.py makemigrations 
-    $ python manage.py migrate
-#### Run the development server
-    $ python manage.py runserver
-#### Open your browser and go to
-   http://127.0.0.1:8000
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 
+#### Start the development server
+```bash
+python manage.py runserver
+```
 
+#### Open in your browser
+```text
+http://127.0.0.1:8000
+```
 
-## ðŸ“Œ Future Improvements
+---
 
-- ðŸ” User authentication  
-- ðŸ“ CSV export of results  
-- ðŸ¤– LLM fine-tuning for more accurate skill extraction  
+## Model Behavior
+
+- The local NER model is downloaded once on first use if it is not already present on the machine.
+- After that, the saved model files are reused locally.
+- Model weights are loaded when the server starts and then cached for the duration of the process.
+
+---
+
+## Future Improvements
+
+- Add project extraction
+- Improve contact extraction for more layouts
+- Add user authentication
+- Add CSV export of results
+- Train and benchmark a domain-specific local model later

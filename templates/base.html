@@ -188,7 +188,41 @@
             border: 1px solid #162e24 !important;
             border-radius: 0.375rem;
             min-height: 42px;
+            width: 100% !important;
             color: #e5e7eb !important;
+            padding: 4px 10px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 30px;
+            margin: 0;
+            padding: 0;
+            line-height: 30px;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+            color: #9ca3af !important;
+            line-height: 30px;
+            margin: 0;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-search--inline {
+            margin: 0;
+            float: none;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-search__field {
+            height: 30px !important;
+            line-height: 30px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            min-width: 4ch !important;
+            color: #e5e7eb !important;
+            background: transparent !important;
+            border: 0 !important;
         }
 
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
@@ -197,15 +231,13 @@
             color: white !important;
             border-radius: 0.25rem;
             padding: 2px 8px !important;
+            margin: 2px 6px 2px 0 !important;
+            float: none;
         }
 
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
             color: white !important;
             margin-right: 0.375rem !important;
-        }
-
-        .select2-container--default .select2-search--inline .select2-search__field {
-            color: #e5e7eb !important;
         }
 
         {% block style %}

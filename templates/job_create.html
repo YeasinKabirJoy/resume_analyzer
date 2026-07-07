@@ -38,6 +38,25 @@
         cursor: not-allowed;
         background-color: #4b5563 !important;
     }
+
+    #jobRoleForm .select2-container--default .select2-selection--multiple {
+        min-height: 42px;
+        padding: 6px 12px !important;
+    }
+
+    #jobRoleForm .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        line-height: 28px;
+        padding: 0 !important;
+    }
+
+    #jobRoleForm .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+        line-height: 28px;
+    }
+
+    #jobRoleForm .select2-container--default .select2-selection--multiple .select2-search__field {
+        height: 28px !important;
+        line-height: 28px !important;
+    }
 {% endblock %}
 
 {% block content %}
@@ -112,7 +131,9 @@ $(document).ready(function() {
     $('#id_mandatory_skills, #id_optional_skills').select2({
         placeholder: "Select skills",
         allowClear: true,
-        closeOnSelect: false
+        closeOnSelect: false,
+        width: '100%',
+        dropdownAutoWidth: true
     });
 
     const $form = $('#jobRoleForm');
