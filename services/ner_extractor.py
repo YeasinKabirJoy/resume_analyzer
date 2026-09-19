@@ -3,6 +3,7 @@ from functools import lru_cache
 
 from .normalizer import normalize_for_match, normalize_whitespace
 from .rule_extractors import (
+    extract_educations as rule_extract_educations,
     extract_experiences as rule_extract_experiences,
     extract_sections,
     normalize_date_token,
@@ -95,25 +96,134 @@ EXPLICIT_DEGREE_HINTS = [
 def extract_experiences(text: str) -> list[dict]:
     sections = extract_sections(text)
     experience_text = sections.get("experience") or text or ""
-    records = _extract_ner_first_section_records(experience_text, mode="experience")
-    records = [record for record in records if _is_valid_experience_record(record)]
+    rule_records = rule_extract_experiences(text)
+    ner_spans = extract_ner_spans(experience_text)
+    reconciled = _reconcile_experience_records(rule_records, ner_spans, experience_text)
+    records = [record for record in reconciled if _is_valid_experience_record(record)]
     if records:
         print("EXPERIENCE EXTRACTED BY: NER-FIRST")
         return records
-    print("EXPERIENCE EXTRACTED BY: RULES")
-    return [record for record in rule_extract_experiences(text) if _is_valid_experience_record(record)]
+    fallback = [record for record in rule_records if _is_valid_experience_record(record)]
+    if fallback:
+        print("EXPERIENCE EXTRACTED BY: RULES")
+        return fallback
+    return []
 
 
 def extract_educations(text: str) -> list[dict]:
     sections = extract_sections(text)
     education_text = sections.get("education") or text or ""
-    records = _extract_ner_first_education_records(education_text)
-    records = [record for record in records if _is_valid_education_record(record)]
+    rule_records = rule_extract_educations(text)
+    ner_spans = extract_ner_spans(education_text)
+    reconciled = _reconcile_education_records(rule_records, ner_spans, education_text)
+    records = [record for record in reconciled if _is_valid_education_record(record)]
     if records:
         print("EDUCATION EXTRACTED BY: NER-FIRST")
         return records
-    print("EDUCATION EXTRACTED BY: RULES")
-    return [record for record in rule_extract_educations(education_text) if _is_valid_education_record(record)]
+    fallback = [record for record in rule_records if _is_valid_education_record(record)]
+    if fallback:
+        print("EDUCATION EXTRACTED BY: RULES")
+        return fallback
+    return []
+
+
+def _reconcile_experience_records(rule_records: list[dict], ner_spans: list[dict], experience_text: str) -> list[dict]:
+    if not rule_records:
+        return []
+
+    org_spans = [
+        span.get("word") or span.get("text") or ""
+        for span in ner_spans
+        if span.get("entity_group") in {"ORG", "COMPANY"} or span.get("label") in {"ORG", "COMPANY"}
+    ]
+    loc_spans = [
+        span.get("word") or span.get("text") or ""
+        for span in ner_spans
+        if span.get("entity_group") in {"LOC", "LOCATION"} or span.get("label") in {"LOC", "LOCATION"}
+    ]
+
+    reconciled = []
+    for rec in rule_records:
+        item = dict(rec)
+        evidence = dict(item.get("evidence", {}))
+
+        comp = item.get("company", "")
+        if comp:
+            if any(comp.lower() in org.lower() or org.lower() in comp.lower() for org in org_spans):
+                evidence["ner_org_validated"] = True
+                item["confidence"] = max(item.get("confidence", 0.5), 0.98)
+        else:
+            for org in org_spans:
+                clean_org = org.strip()
+                if (
+                    clean_org
+                    and not clean_org.startswith("##")
+                    and len(clean_org) >= 3
+                    and clean_org.lower() not in item.get("designation", "").lower()
+                    and not _looks_like_description(clean_org)
+                    and _looks_like_org_name(clean_org)
+                ):
+                    item["company"] = clean_org
+                    evidence["company"] = clean_org
+                    evidence["company_source"] = "ner"
+                    item["confidence"] = 0.85
+                    break
+
+        if not item.get("location"):
+            for loc in loc_spans:
+                clean_loc = loc.strip()
+                if clean_loc and not clean_loc.startswith("##") and len(clean_loc) >= 3:
+                    item["location"] = clean_loc
+                    evidence["location"] = clean_loc
+                    break
+
+        item["evidence"] = evidence
+        reconciled.append(item)
+
+    return reconciled
+
+
+def _reconcile_education_records(rule_records: list[dict], ner_spans: list[dict], education_text: str) -> list[dict]:
+    if not rule_records:
+        return []
+
+    org_spans = [
+        span.get("word") or span.get("text") or ""
+        for span in ner_spans
+        if span.get("entity_group") in {"ORG", "COMPANY"} or span.get("label") in {"ORG", "COMPANY"}
+    ]
+
+    reconciled = []
+    for rec in rule_records:
+        item = dict(rec)
+        evidence = dict(item.get("evidence", {}))
+
+        inst = item.get("institution", "")
+        if inst:
+            if any(inst.lower() in org.lower() or org.lower() in inst.lower() for org in org_spans):
+                evidence["ner_org_validated"] = True
+                item["confidence"] = max(item.get("confidence", 0.5), 0.98)
+        else:
+            for org in org_spans:
+                clean_org = org.strip()
+                if (
+                    clean_org
+                    and not clean_org.startswith("##")
+                    and len(clean_org) >= 3
+                    and clean_org.lower() not in item.get("degree", "").lower()
+                    and not _looks_like_result(clean_org)
+                    and _looks_like_org_name(clean_org)
+                ):
+                    item["institution"] = clean_org
+                    evidence["institution"] = clean_org
+                    evidence["institution_source"] = "ner"
+                    item["confidence"] = 0.85
+                    break
+
+        item["evidence"] = evidence
+        reconciled.append(item)
+
+    return reconciled
 
 
 def _extract_ner_first_section_records(section_text: str, mode: str) -> list[dict]:
@@ -441,62 +551,28 @@ def get_ner_pipeline():
         return None
 
 
+_NER_CACHE = {}
+
+
 def extract_ner_spans(text: str) -> list[dict]:
+    if not text or not text.strip():
+        return []
+    if text in _NER_CACHE:
+        return _NER_CACHE[text]
     ner = get_ner_pipeline()
-    if ner is None or not text or not text.strip():
+    if ner is None:
         return []
     try:
-        return ner(text)
+        results = ner(text)
+        _NER_CACHE[text] = results
+        return results
     except Exception:
         return []
 
 
 def rule_extract_educations(text: str) -> list[dict]:
-    lines = [normalize_whitespace(line) for line in (text or "").splitlines()]
-    lines = [line for line in lines if line]
-    records = []
-
-    for index, line in enumerate(lines):
-        split_degree, split_institution = _split_mixed_education_line(line)
-        split_result, result_institution = _split_result_institution_line(line)
-        is_degree_line = bool(split_degree) or _looks_like_degree(line)
-        is_institution_line = bool(split_institution) or bool(result_institution) or _looks_like_institution(line)
-        is_result_line = bool(split_result) or _looks_like_result(line)
-        if not is_degree_line and not is_institution_line and not is_result_line:
-            continue
-
-        window = lines[max(0, index - 2) : min(len(lines), index + 5)]
-        degree = split_degree or (_clean_education_component(line) if _looks_like_degree(line) else "")
-        institution = split_institution or result_institution or (_clean_education_component(line) if _looks_like_institution(line) and not _looks_like_degree(line) else "")
-        result = split_result or _extract_result_phrase(line) or next((candidate for candidate in window if candidate != line and _looks_like_result(candidate)), "")
-        if not degree and not institution and is_result_line:
-            if records and not records[-1].get("result"):
-                records[-1]["result"] = result
-            continue
-        if not degree and not institution:
-            continue
-        if not degree:
-            degree = next((candidate for candidate in window if candidate != line and _looks_like_degree(candidate) and not _looks_like_result(candidate)), "")
-        if not institution:
-            institution = next((candidate for candidate in window if candidate != line and _looks_like_institution(candidate) and not _looks_like_result(candidate)), "")
-        year = _extract_year_token(line) or next((year for candidate in window if candidate != line for year in [_extract_year_token(candidate)] if year), "")
-
-        degree = _clean_education_component(degree)
-        institution = _clean_education_component(institution)
-        result = normalize_whitespace(result)
-
-        record = {
-            "degree": degree,
-            "institution": institution,
-            "result": result,
-            "year": year,
-        }
-        if records and _can_merge_education_records(records[-1], record):
-            records[-1] = _merge_education_records(records[-1], record)
-        elif record not in records:
-            records.append(record)
-
-    return records
+    from .rule_extractors import extract_educations as r_extract_educations
+    return r_extract_educations(text)
 
 
 def _extract_result_phrase(text: str) -> str:

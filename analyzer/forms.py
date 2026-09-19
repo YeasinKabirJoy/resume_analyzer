@@ -1,25 +1,15 @@
 from django import forms
-from .models import JobRole, Skill
+from .models import JobPosting, Position, Skill
 
 
-class JobRoleForm(forms.ModelForm):
+class PositionForm(forms.ModelForm):
     class Meta:
-        model = JobRole
-        fields = '__all__'
-
+        model = Position
+        fields = ['title']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
-                'placeholder': 'Enter job title',
-            }),
-            'minimum_experience': forms.NumberInput(attrs={
-                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
-            }),
-            'version': forms.NumberInput(attrs={
-                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
-            }),
-            'active': forms.CheckboxInput(attrs={
-                'class': 'rounded text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500',
+                'placeholder': 'Enter position title',
             }),
         }
 
@@ -45,14 +35,31 @@ class SkillForm(forms.ModelForm):
             }),
         }
 
-    def clean_aliases(self):
-        raw_value = self.cleaned_data.get('aliases', '')
-        if isinstance(raw_value, list):
-            return raw_value
 
-        aliases = []
-        for chunk in str(raw_value).replace('\n', ',').split(','):
-            alias = chunk.strip()
-            if alias:
-                aliases.append(alias)
-        return aliases
+class JobPostingForm(forms.ModelForm):
+    class Meta:
+        model = JobPosting
+        fields = ['position', 'title_override', 'department', 'location', 'required_experience', 'status']
+        widgets = {
+            'position': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
+            }),
+            'title_override': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
+                'placeholder': 'Optional job title override',
+            }),
+            'department': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
+                'placeholder': 'Optional department',
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
+                'placeholder': 'Optional location',
+            }),
+            'required_experience': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
+            }),
+            'status': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 rounded bg-gray-900 text-white border border-gray-600',
+            }),
+        }

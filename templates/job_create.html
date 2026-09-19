@@ -62,30 +62,57 @@
 {% block content %}
 <div class="content flex items-center justify-center py-8">
     <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-2xl rounded-2xl p-8 w-full max-w-2xl">
-        <h1 class="text-2xl font-bold mb-6 text-gray-100">Create New Job Role</h1>
+        <div class="flex items-center justify-between gap-3 mb-6">
+            <h1 class="text-2xl font-bold text-gray-100">Create New Job</h1>
+            <a href="{% url 'positions' %}" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">Manage Positions</a>
+        </div>
 
         <form method="post" id="jobRoleForm" class="space-y-6">
             {% csrf_token %}
 
-            <!-- Job Title -->
+            <!-- Position -->
             <div>
-                <label for="id_title" class="block text-sm font-medium text-gray-300 mb-1">Job Title</label>
-                <input type="text" name="title" id="id_title" required
+                <label for="id_position" class="block text-sm font-medium text-gray-300 mb-1">Position</label>
+                <select name="position" id="id_position" required
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <option value="">Select a position</option>
+                    {% for position in positions %}
+                        <option value="{{ position.id }}">{{ position.title }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-500 mt-1.5">Create a new position first if it is not listed here.</p>
+            </div>
+
+            <!-- Required Experience -->
+            <div>
+                <label for="id_required_experience" class="block text-sm font-medium text-gray-300 mb-1">Required Experience (years)</label>
+                <input type="number" name="required_experience" id="id_required_experience" min="0" step="0.1" value="0" required
                        class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500">
             </div>
 
-            <!-- Minimum Experience -->
+            <!-- Department -->
             <div>
-                <label for="id_minimum_experience" class="block text-sm font-medium text-gray-300 mb-1">Minimum Experience (years)</label>
-                <input type="number" name="minimum_experience" id="id_minimum_experience" min="0" step="0.1" value="0" required
-                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <label for="id_department" class="block text-sm font-medium text-gray-300 mb-1">Department</label>
+                <input type="text" name="department" id="id_department"
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500"
+                       placeholder="Optional">
             </div>
 
-            <!-- Active Status -->
-            <div class="flex items-center">
-                <input type="checkbox" name="active" id="id_active" checked
-                       class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-600 rounded">
-                <label for="id_active" class="ml-2 block text-sm text-gray-300">Active</label>
+            <!-- Location -->
+            <div>
+                <label for="id_location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+                <input type="text" name="location" id="id_location"
+                       class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500"
+                       placeholder="Optional">
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label for="id_status" class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                <select name="status" id="id_status" class="form-input w-full rounded-md shadow-sm p-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <option value="open" selected>Open</option>
+                    <option value="closed">Closed</option>
+                </select>
             </div>
 
             <!-- Mandatory Skills -->
@@ -118,7 +145,7 @@
             <div class="pt-4">
                 <button type="submit" id="submitBtn"
                         class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-2 px-4 rounded-md transition">
-                    Create Job Role
+                    Create Job
                 </button>
             </div>
         </form>

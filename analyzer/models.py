@@ -1,18 +1,12 @@
 from django.db import models
 import uuid
-from django.utils.text import slugify
 
 # Create your models here.
 
-class JobRole(models.Model):
+class Position(models.Model):
     title = models.CharField(max_length=50)
-    minimum_experience = models.PositiveIntegerField(default=0)
-
-    version = models.PositiveIntegerField(blank=True)
-    active = models.BooleanField(default=True,blank=True)
 
     id = models.UUIDField(primary_key=True,default=uuid.uuid4,unique=True,editable=False)
-    slug = models.SlugField(max_length=60,unique=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -22,21 +16,46 @@ class JobRole(models.Model):
         indexes = [
             models.Index(fields=['title'])
         ]
-        verbose_name = 'Job Role'
-        verbose_name_plural = 'Job Roles'
+        verbose_name = 'Position'
+        verbose_name_plural = 'Positions'
 
     def __str__(self):
-        return f"{self.title}-v{self.version}"
+        return self.title
     
-    def save(self, *args,**kwargs):
-        if self._state.adding and not self.version:
-            last = JobRole.objects.filter(title=self.title).order_by('-version').first()
-            self.version = last.version + 1 if last else 1
-        if not self.slug:
-            base_slug = slugify(self.title)
-            self.slug = slugify(f"{base_slug}-v{self.version}")
-        return super().save(*args,**kwargs)
-    
+class JobPosting(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    position = models.ForeignKey(Position, on_delete=models.CASCADE, related_name='postings')
+    title_override = models.CharField(max_length=120, blank=True)
+    department = models.CharField(max_length=120, blank=True)
+    location = models.CharField(max_length=120, blank=True)
+    required_experience = models.PositiveIntegerField(default=0)
+    status = models.CharField(
+        max_length=15,
+        choices=[
+            ('open', 'Open'),
+            ('closed', 'Closed'),
+        ],
+        default='open'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]
+        verbose_name = 'Job'
+        verbose_name_plural = 'Jobs'
+
+    def __str__(self):
+        return self.display_title
+
+    @property
+    def display_title(self):
+        return self.title_override or self.position.title
+
 
 class Skill(models.Model):
     title = models.CharField(max_length=50)
@@ -55,23 +74,23 @@ class Skill(models.Model):
         return self.title
     
 class SkillRequirements(models.Model):
-    job_role = models.ForeignKey(JobRole,on_delete=models.CASCADE,related_name='skill_requirements')
+    job_posting = models.ForeignKey(JobPosting,on_delete=models.CASCADE,related_name='skill_requirements')
     skill = models.ForeignKey(Skill,on_delete=models.CASCADE)
     is_mandatory = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['job_role','skill']
-        unique_together = ('job_role','skill')
+        ordering = ['job_posting','skill']
+        unique_together = ('job_posting','skill')
 
         verbose_name = 'Skill Requirement'
         verbose_name_plural = 'Skill Requirements'
 
     def __str__(self):
-        return self.job_role.title + '-v' + str(self.job_role.version) +' | ' + self.skill.title + ' | ' + ('required' if self.is_mandatory else '')
+        return self.job_posting.display_title +' | ' + self.skill.title + ' | ' + ('required' if self.is_mandatory else 'optional')
 
 
 class Resume(models.Model):
-    job_role = models.ForeignKey('JobRole', on_delete=models.CASCADE)
+    job_posting = models.ForeignKey('JobPosting', on_delete=models.CASCADE, related_name='resumes')
     resume = models.FileField(upload_to='resumes/')
 
     name = models.CharField(max_length=255, blank=True,null=True)
@@ -121,4 +140,4 @@ class Resume(models.Model):
         verbose_name_plural = 'Resumes'
 
     def __str__(self):
-        return f"{self.name or 'Unknown'} - {self.job_role.title}"
+        return f"{self.name or 'Unknown'} - {self.job_posting.display_title}"

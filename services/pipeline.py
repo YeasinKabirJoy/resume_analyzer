@@ -10,19 +10,19 @@ from utils.pdf_parser import extract_text_from_pdf
 
 def process_resume(resume_record):
     text = extract_text_from_pdf(resume_record.resume.path)
-    analyzed = analyze_text(text, resume_record.job_role)
+    analyzed = analyze_text(text, resume_record.job_posting)
     print_resume_result(analyzed, resume_record.resume.path)
     return analyzed
 
 
-def analyze_text(resume_text, job_role):
+def analyze_text(resume_text, job_posting):
     sections = extract_sections(resume_text)
     contacts = extract_contacts(resume_text)
     experiences = extract_experiences(resume_text)
     educations = extract_educations(resume_text)
     name = extract_name(resume_text, contacts)
 
-    skill_requirements = list(job_role.skill_requirements.select_related("skill").all())
+    skill_requirements = list(job_posting.skill_requirements.select_related("skill").all())
     mandatory_skills = [item.skill for item in skill_requirements if item.is_mandatory]
     optional_skills = [item.skill for item in skill_requirements if not item.is_mandatory]
     skill_match = match_skills(resume_text, mandatory_skills, optional_skills)
@@ -30,7 +30,7 @@ def analyze_text(resume_text, job_role):
     total_experience, experience_breakdown = calculate_total_experience(experiences)
     final_score = score_resume(
         total_experience,
-        job_role.minimum_experience,
+        job_posting.required_experience,
         skill_match["matched_mandatory"],
         skill_match["missing_mandatory"],
         skill_match["matched_optional"],

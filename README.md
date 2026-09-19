@@ -1,12 +1,12 @@
 # Resume Analyzer
 
-**Resume Analyzer** is a Django web application that evaluates ATS-style resumes against job roles using a hybrid local extraction pipeline. It combines lightweight NER with deterministic rules to parse structured resume data, then matches that data against role requirements.
+**Resume Analyzer** is a Django web application that evaluates ATS-style resumes against jobs using a hybrid local extraction pipeline. It combines lightweight NER with deterministic rules to parse structured resume data, then matches that data against position requirements.
 
 ---
 
 ## Features
 
-- Upload a PDF resume and select a job role
+- Upload a PDF resume and select a job
 - Extract structured data locally from ATS-style resumes
   - Personal details
   - Experience history
@@ -16,7 +16,7 @@
   - NER-first for experience and education
   - Deterministic rules as fallback
   - Rules-based contact and skill matching
-- Compare extracted resume data with role requirements
+- Compare extracted resume data with job requirements
   - Minimum experience
   - Mandatory skills
   - Optional skills
@@ -25,8 +25,9 @@
   - `skipped`
   - `overqualified`
 - Show resume analysis details and a PDF preview in the UI
-- Support versioned job roles
-- Manage job roles, skills, and uploaded resumes from the dashboard and admin
+- Support separate jobs with the same title
+- Manage reusable positions, jobs, skills, and uploaded resumes from the dashboard and admin
+- Create positions first, then build jobs from those positions
 
 ---
 
@@ -35,11 +36,22 @@
 ### Dashboard
 <img src="preview/dashboard-v2.png" alt="Dashboard" width="700"/>
 
-### Resume Upload
-<img src="preview/upload-v2.png" alt="Resume Upload" width="700"/>
+
 
 ### Active Jobs
 <img src="preview/active_job-v2.png" alt="Active Jobs" width="700"/>
+
+### Positions
+<img src="preview/positions-v2.png" alt="Positions" width="700"/>
+
+### Job Create
+<img src="preview/job_create-v2.png" alt="Job Create" width="700"/>
+
+### Skills Add/Edit
+<img src="preview/skill_crud-v2.png" alt="Skills Crud" width="700"/>
+
+### Resume Upload
+<img src="preview/upload-v2.png" alt="Resume Upload" width="700"/>
 
 ### Resumes
 <img src="preview/all_resume-v2.png" alt="All Resumes" width="700"/>
@@ -47,11 +59,6 @@
 ### Resume Details
 <img src="preview/resume_details-v2.png" alt="Resume Details" width="700"/>
 
-### Job Role Create
-<img src="preview/job_create-v2.png" alt="Job Role Create" width="700"/>
-
-### Skills Add/Edit
-<img src="preview/skill_crud-v2.png" alt="Skills Crud" width="700"/>
 
 ---
 

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Bulk Resume Results{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-white">Bulk Upload Results</h1>
+        <p class="text-gray-400 text-sm mt-1">Job: <span class="text-emerald-400 font-semibold">{{ job_posting.display_title }}</span></p>
+      </div>
+      <a href="{% url 'resume_upload' %}" class="bg-slate-800 hover:bg-slate-700 border border-white/5 text-gray-200 px-4 py-2.5 rounded-lg text-sm transition">
+        Upload More
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-slate-900/40 border border-white/5 rounded-2xl p-4">
+        <div class="text-xs uppercase tracking-wider text-gray-400">Total</div>
+        <div class="text-3xl font-black text-white mt-2">{{ results|length }}</div>
+      </div>
+      <div class="bg-slate-900/40 border border-white/5 rounded-2xl p-4">
+        <div class="text-xs uppercase tracking-wider text-gray-400">Completed</div>
+        <div class="text-3xl font-black text-emerald-400 mt-2">{{ completed_count }}</div>
+      </div>
+      <div class="bg-slate-900/40 border border-white/5 rounded-2xl p-4">
+        <div class="text-xs uppercase tracking-wider text-gray-400">Failed</div>
+        <div class="text-3xl font-black text-rose-400 mt-2">{{ failed_count }}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {% for item in results %}
+        <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold text-white">{{ item.name|default:item.file_name }}</h2>
+              <p class="text-xs text-gray-500 mt-1">{{ item.file_name }}</p>
+            </div>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
+              {% if item.status == 'completed' %} bg-emerald-500/10 text-emerald-400 border border-emerald-500/25
+              {% else %} bg-rose-500/10 text-rose-400 border border-rose-500/25
+              {% endif %}">
+              {{ item.status|title }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-white/2 border border-white/5 rounded-xl p-3">
+              <div class="text-gray-400 text-xs">Score</div>
+              <div class="text-white font-bold mt-1">{{ item.score|default:"-" }}</div>
+            </div>
+            <div class="bg-white/2 border border-white/5 rounded-xl p-3">
+              <div class="text-gray-400 text-xs">Confidence</div>
+              <div class="text-white font-bold mt-1">{{ item.confidence_score|default:"-" }}</div>
+            </div>
+          </div>
+
+          <div class="text-sm">
+            <div class="text-gray-400 text-xs uppercase tracking-wider">Verdict</div>
+            <div class="text-white font-semibold mt-1">{{ item.verdict|title }}</div>
+          </div>
+
+          {% if item.error_message %}
+            <div class="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-3">
+              {{ item.error_message }}
+            </div>
+          {% endif %}
+
+          <div class="pt-2 border-t border-white/5 flex justify-end">
+            <a href="{% url 'result' item.id %}" class="text-emerald-400 hover:text-emerald-300 text-sm font-medium">
+              Open result &rarr;
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

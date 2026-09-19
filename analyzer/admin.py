@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 
-from .models import JobRole, Resume, Skill, SkillRequirements
+from .models import JobPosting, Position, Resume, Skill, SkillRequirements
 
 
 class SkillAdminForm(forms.ModelForm):
@@ -35,6 +35,18 @@ class SkillAdmin(admin.ModelAdmin):
     search_fields = ("title",)
 
 
-admin.site.register(JobRole)
+@admin.register(Position)
+class PositionAdmin(admin.ModelAdmin):
+    list_display = ("title", "created_at", "updated_at")
+    search_fields = ("title",)
+
+
+@admin.register(JobPosting)
+class JobPostingAdmin(admin.ModelAdmin):
+    list_display = ("display_title", "position", "status", "department", "location", "created_at")
+    list_filter = ("status", "position")
+    search_fields = ("position__title", "title_override", "department", "location")
+
+
 admin.site.register(SkillRequirements)
 admin.site.register(Resume)

@@ -7,7 +7,7 @@ from django.test import SimpleTestCase
 
 from services.ner_extractor import extract_educations, extract_experiences as extract_experiences_ner
 from services.pipeline import analyze_text, process_resume
-from services.rule_extractors import extract_contacts, extract_experiences, extract_name, extract_sections
+from services.rule_extractors import extract_contacts, extract_experiences, extract_name, extract_sections, is_date_anchor_line, parse_date_range
 from services.skill_matcher import match_skills
 from utils.experiance_calculate import calculate_total_experience
 
@@ -70,9 +70,9 @@ class FakeRequirementManager:
         return self._requirements
 
 
-class FakeJobRole:
-    def __init__(self, minimum_experience=2, requirements=None):
-        self.minimum_experience = minimum_experience
+class FakeJobPosting:
+    def __init__(self, required_experience=2, requirements=None):
+        self.required_experience = required_experience
         self.skill_requirements = FakeRequirementManager(requirements or [])
 
 
@@ -143,6 +143,72 @@ class ExtractorTests(SimpleTestCase):
         self.assertEqual(experiences[0]["company"], "Riseup Asia LLC.")
         self.assertEqual(experiences[0]["start"], "Jan 2023")
         self.assertEqual(experiences[0]["end"], "Mar 2024")
+
+    def test_extract_experiences_ner_keeps_company_clean(self):
+        text = """
+        EXPERIENCE
+        Python Software Engineer I
+        Riseup Asia LLC.
+        Jan 2023 - Mar 2024
+        Conducted R&D on local AI integration, using LoRA fine-tuning and GGUF quantization to handle resource constraints.
+        """
+
+        experiences = extract_experiences_ner(text)
+
+        self.assertEqual(len(experiences), 1)
+        self.assertEqual(experiences[0]["designation"], "Python Software Engineer I")
+        self.assertEqual(experiences[0]["company"], "Riseup Asia LLC.")
+        self.assertEqual(experiences[0]["start"], "Jan 2023")
+        self.assertEqual(experiences[0]["end"], "Mar 2024")
+
+    def test_extract_experiences_ner_keeps_single_token_company(self):
+        text = """
+        EXPERIENCE
+        Platform Engineer
+        ByteForge
+        Jan 2022 - Present
+        Built internal tooling and dashboards.
+        """
+
+        experiences = extract_experiences_ner(text)
+
+        self.assertEqual(len(experiences), 1)
+        self.assertEqual(experiences[0]["designation"], "Platform Engineer")
+        self.assertEqual(experiences[0]["company"], "ByteForge")
+        self.assertEqual(experiences[0]["start"], "Jan 2022")
+        self.assertEqual(experiences[0]["end"], "Present")
+
+    def test_extract_experiences_ner_recovers_company_from_anchor_line(self):
+        text = """
+        EXPERIENCE
+        Python Developer
+        Nimbus Labs | Jan 2022 - Present
+        Built internal tooling and dashboards.
+        """
+
+        experiences = extract_experiences_ner(text)
+
+        self.assertEqual(len(experiences), 1)
+        self.assertEqual(experiences[0]["designation"], "Python Developer")
+        self.assertEqual(experiences[0]["company"], "Nimbus Labs")
+        self.assertEqual(experiences[0]["start"], "Jan 2022")
+        self.assertEqual(experiences[0]["end"], "Present")
+
+    def test_extract_experiences_ner_rejects_description_as_company(self):
+        text = """
+        EXPERIENCE
+        Lead Developer
+        Jan 2022 - Present
+        Built internal tooling and dashboards.
+        """
+
+        experiences = extract_experiences_ner(text)
+
+        self.assertEqual(len(experiences), 1)
+        self.assertEqual(experiences[0]["designation"], "Lead Developer")
+        self.assertEqual(experiences[0]["company"], "")
+        self.assertEqual(experiences[0]["start"], "Jan 2022")
+        self.assertEqual(experiences[0]["end"], "Present")
 
     def test_extract_experiences_keeps_company_empty_when_unclear(self):
         text = """
@@ -250,6 +316,23 @@ class ExtractorTests(SimpleTestCase):
         self.assertEqual(educations[1]["institution"], "Engineering University School and College")
         self.assertIn("Secondary School Certificate", educations[1]["degree"])
 
+    def test_extract_educations_ner_keeps_degree_and_institution_clean(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science and Engineering
+        University of Asia Pacific
+        CGPA 3.95 / 4.00
+        2019
+        """
+
+        educations = extract_educations(text)
+
+        self.assertEqual(len(educations), 1)
+        self.assertEqual(educations[0]["degree"], "BSc in Computer Science and Engineering")
+        self.assertEqual(educations[0]["institution"], "University of Asia Pacific")
+        self.assertIn("CGPA", educations[0]["result"])
+        self.assertEqual(educations[0]["year"], "2019")
+
     def test_extract_educations_rejects_result_as_degree(self):
         text = """
         EDUCATION
@@ -283,6 +366,21 @@ class ExtractorTests(SimpleTestCase):
         self.assertEqual(educations[2]["institution"], "Viqarunnisa Noon School and College")
         self.assertEqual(educations[2]["year"], "2018")
 
+    def test_extract_educations_strips_trailing_separators(self):
+        text = """
+        EDUCATION
+        BSc in Software Engineering
+        Daffodil International University |
+        CGPA 3.82 / 4.00
+        2021
+        """
+
+        educations = extract_educations(text)
+
+        self.assertEqual(len(educations), 1)
+        self.assertEqual(educations[0]["institution"], "Daffodil International University")
+        self.assertEqual(educations[0]["year"], "2021")
+
     def test_extract_experiences_supports_template_dates(self):
         template_text = """
         Work Experience
@@ -296,6 +394,16 @@ class ExtractorTests(SimpleTestCase):
         self.assertEqual(len(experiences), 1)
         self.assertEqual(experiences[0]["start"], "Sep 2007")
         self.assertEqual(experiences[0]["end"], "Aug 2010")
+
+    def test_date_anchor_detection_handles_multiple_formats(self):
+        self.assertTrue(is_date_anchor_line("Jan 2022 - Present"))
+        self.assertTrue(is_date_anchor_line("2018 - 2020"))
+        self.assertTrue(is_date_anchor_line("Sep 07 to Aug 10"))
+        self.assertTrue(is_date_anchor_line("Present"))
+
+        parsed = parse_date_range("Jan 2022 – Present")
+        self.assertEqual(parsed["start"], "Jan 2022")
+        self.assertEqual(parsed["end"], "Present")
 
     def test_extract_name_prefers_header_line(self):
         name = extract_name(ATS_RESUME_TEXT)
@@ -321,9 +429,9 @@ class PipelineTests(SimpleTestCase):
             FakeRequirement(FakeSkill("Django"), is_mandatory=True),
             FakeRequirement(FakeSkill("Django REST Framework", aliases=["drf"]), is_mandatory=False),
         ]
-        job_role = FakeJobRole(minimum_experience=1, requirements=requirements)
+        job_posting = FakeJobPosting(required_experience=1, requirements=requirements)
 
-        result = analyze_text(ATS_RESUME_TEXT, job_role)
+        result = analyze_text(ATS_RESUME_TEXT, job_posting)
 
         self.assertEqual(result["name"], "Jane Doe")
         self.assertEqual(result["email"], "jane.doe@example.com")
@@ -336,10 +444,10 @@ class PipelineTests(SimpleTestCase):
 
     @patch("services.pipeline.extract_text_from_pdf", return_value="too short")
     def test_process_resume_handles_short_text(self, mocked_extract_text):
-        job_role = FakeJobRole(requirements=[FakeRequirement(FakeSkill("Python"))])
+        job_posting = FakeJobPosting(requirements=[FakeRequirement(FakeSkill("Python"))])
         resume_record = SimpleNamespace(
             resume=SimpleNamespace(path="fake.pdf"),
-            job_role=job_role,
+            job_posting=job_posting,
         )
 
         result = process_resume(resume_record)
@@ -362,3 +470,146 @@ class PipelineTests(SimpleTestCase):
 
         self.assertGreater(total_years, 0)
         self.assertEqual(len(per_role_years), 3)
+
+
+class FormatMatrixTests(SimpleTestCase):
+    def test_education_format_a_multiline(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science
+        University of Dhaka
+        2019
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["degree"], "BSc in Computer Science")
+        self.assertEqual(edus[0]["institution"], "University of Dhaka")
+        self.assertEqual(edus[0]["year"], "2019")
+
+    def test_education_format_b_hyphen_separated(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science - University of Dhaka - 2019
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["degree"], "BSc in Computer Science")
+        self.assertEqual(edus[0]["institution"], "University of Dhaka")
+        self.assertEqual(edus[0]["year"], "2019")
+
+    def test_education_format_c_pipe_reversed(self):
+        text = """
+        EDUCATION
+        University of Dhaka | BSc in Computer Science | 2019
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["degree"], "BSc in Computer Science")
+        self.assertEqual(edus[0]["institution"], "University of Dhaka")
+        self.assertEqual(edus[0]["year"], "2019")
+
+    def test_education_format_d_with_gpa(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science
+        University of Dhaka
+        CGPA: 3.82 / 4.00
+        2019
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["degree"], "BSc in Computer Science")
+        self.assertEqual(edus[0]["institution"], "University of Dhaka")
+        self.assertIn("3.82", edus[0]["result"])
+        self.assertEqual(edus[0]["year"], "2019")
+
+    def test_education_format_e_date_range(self):
+        text = """
+        EDUCATION
+        University of Dhaka
+        Bachelor of Science in Computer Science
+        2015 - 2019
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["degree"], "Bachelor of Science in Computer Science")
+        self.assertEqual(edus[0]["institution"], "University of Dhaka")
+        self.assertEqual(edus[0]["start"], "2015")
+        self.assertEqual(edus[0]["end"], "2019")
+
+    def test_education_format_f_parentheses(self):
+        text = """
+        EDUCATION
+        BSc in CSE - BRAC University (2019)
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertIn("BSc in CSE", edus[0]["degree"])
+        self.assertEqual(edus[0]["institution"], "BRAC University")
+        self.assertEqual(edus[0]["year"], "2019")
+
+    def test_education_user_reported_failing_case(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science
+        University of Dhaka | CGPA 3.74 / 4.00 | 2019
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["degree"], "BSc in Computer Science")
+        self.assertEqual(edus[0]["institution"], "University of Dhaka")
+        self.assertIn("3.74", edus[0]["result"])
+        self.assertEqual(edus[0]["year"], "2019")
+        self.assertGreaterEqual(edus[0]["confidence"], 0.85)
+
+    def test_education_expected_graduation(self):
+        text = """
+        EDUCATION
+        BSc in Computer Science
+        University of Dhaka
+        Expected 2026
+        """
+        edus = extract_educations(text)
+        self.assertEqual(len(edus), 1)
+        self.assertEqual(edus[0]["end"], "2026")
+
+    def test_experience_single_line_record(self):
+        text = """
+        EXPERIENCE
+        Lead Developer - Mosaic Systems | Jan 2020 - Jan 2024 | Built automation and managed releases.
+        """
+        exps = extract_experiences(text)
+        self.assertEqual(len(exps), 1)
+        self.assertEqual(exps[0]["designation"], "Lead Developer")
+        self.assertEqual(exps[0]["company"], "Mosaic Systems")
+        self.assertEqual(exps[0]["start"], "Jan 2020")
+        self.assertEqual(exps[0]["end"], "Jan 2024")
+
+
+class DummyAtsPdfTests(SimpleTestCase):
+    def test_all_dummy_ats_resumes_extract_cleanly(self):
+        import glob
+        from pathlib import Path
+        from utils.pdf_parser import extract_text_from_pdf
+
+        pdf_files = sorted(glob.glob("dummy_ats/*.pdf"))
+        self.assertGreaterEqual(len(pdf_files), 7)
+
+        for pdf_path in pdf_files:
+            with self.subTest(pdf=pdf_path):
+                text = extract_text_from_pdf(pdf_path)
+                self.assertTrue(text)
+                edus = extract_educations(text)
+                exps = extract_experiences(text)
+
+                self.assertGreater(len(edus), 0, f"No educations extracted from {pdf_path}")
+                for edu in edus:
+                    self.assertTrue(edu["degree"] or edu["institution"])
+                    self.assertIn("confidence", edu)
+                    self.assertIn("evidence", edu)
+
+                filename = Path(pdf_path).name
+                if filename != "dummy_ats_bad_edge_case.pdf":
+                    self.assertGreater(len(exps), 0, f"No experiences extracted from {pdf_path}")
+                else:
+                    self.assertGreaterEqual(len(exps), 1)

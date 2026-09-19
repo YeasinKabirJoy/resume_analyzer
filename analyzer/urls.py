@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home,resume_upload,result,resume_preview,jobs,job_details,job_edit,job_create,resumes,skill,skill_edit,skill_delete
+from .views import home,resume_upload,result,resume_preview,jobs,job_details,job_edit,job_create,resumes,skill,skill_edit,skill_delete,positions,position_edit,position_delete
 urlpatterns = [
     path('upload/', resume_upload,name='resume_upload'),
     path('result/<uuid:id>',result,name='result'),
@@ -8,9 +8,11 @@ urlpatterns = [
     path('jobs/',jobs,name='active_jobs'),
     path('jobs/create/',job_create,name='job_create'),
     path('jobs/<uuid:id>/',job_details,name='job_details'),
-    path('jobs/<uuid:id>/',job_details,name='job_details'),
     path('job_edit/<uuid:id>/',job_edit,name='job_edit'),
     path('jobs/<uuid:id>/resume/',resumes,name='resumes'),
+    path('positions/',positions,name='positions'),
+    path('position_edit/',position_edit,name='position_edit'),
+    path('position_delete/',position_delete,name='position_delete'),
     path('skills/',skill,name='skills'),
     path('skill_edit/',skill_edit,name='skill_edit'),
     path('skill_delete/',skill_delete,name='skill_delete'),
